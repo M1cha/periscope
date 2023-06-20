@@ -1,0 +1,8 @@
+*.elf
+*.npdm
+*.nso
+**/target/
+*.nsp
+*.nacp
+*.ovl
+**/build/
