@@ -6,3 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+kiss3d = "0.35"
+nalgebra = "0.30"
+directories = "5.0"
+bpaf = {version = "0.8", features = ["derive"]}
+egui = "0.22"
+toml = "0.7"
