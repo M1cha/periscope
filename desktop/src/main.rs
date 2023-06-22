@@ -1,10 +1,20 @@
+use anyhow::Result;
 use clap::Parser;
+use std::{cell::RefCell, rc::Rc};
 
 mod cli;
+mod config;
+mod ui;
+use config::Config;
 
-fn main() {
+fn main() -> Result<()> {
     let args = cli::CommandLine::parse();
-    if !args.viewer_only {
-        // start cfgui
+    let mut cfg = Config::open()?;
+    cfg.add_cli(args);
+    let cfg = Rc::new(RefCell::new(cfg));
+    if cfg.borrow().show_viewer() {
+        ui::run_ui(Rc::clone(&cfg));
     }
+    println!("{cfg:?}");
+    Ok(())
 }

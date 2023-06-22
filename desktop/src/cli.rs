@@ -1,4 +1,5 @@
 use clap::Parser;
+use serde::{Deserialize, Serialize};
 
 #[derive(Parser, Debug)]
 #[command(version)]

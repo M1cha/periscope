@@ -2507,6 +2507,8 @@ dependencies = [
  "eframe",
  "kiss3d",
  "nalgebra",
+ "once_cell",
+ "serde",
  "toml 0.7.4",
 ]
 
