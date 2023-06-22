@@ -1,5 +1,4 @@
 use clap::Parser;
-use serde::{Deserialize, Serialize};
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -7,7 +6,7 @@ pub struct CommandLine {
     #[arg(long, short = 'a', value_name = "IP_ADDRESS")]
     /// IP address of switch running sys-scope
     pub switch_addr: Option<String>,
-    #[arg(long, short = 's', default_value_t = String::from("default"))]
+    #[arg(long, short = 's', default_value_t = String::new())]
     /// Name of viewer skin
     pub skin: String,
     #[arg(long)]

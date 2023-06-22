@@ -15,6 +15,7 @@ fn main() -> Result<()> {
     if cfg.borrow().show_viewer() {
         ui::run_ui(Rc::clone(&cfg));
     }
-    println!("{cfg:?}");
+    let cfg = Rc::into_inner(cfg).unwrap().into_inner(); // only other ref has been dropped by now
+    cfg.write()?;
     Ok(())
 }

@@ -3,14 +3,14 @@ use anyhow::Result;
 use directories::ProjectDirs;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::{fs, path::PathBuf};
-use toml::from_str;
+use std::{fs, io::Write, path::PathBuf};
+use toml::{from_str, to_string_pretty};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Config {
-    switch_addr: Option<String>,
-    skin: Option<String>,
-    viewer_only: Option<bool>,
+    pub switch_addr: Option<String>,
+    pub skin: Option<String>,
+    pub viewer_only: Option<bool>,
 }
 
 static DIRS: Lazy<ProjectDirs> = Lazy::new(|| {
@@ -42,5 +42,18 @@ impl Config {
     }
     pub fn show_viewer(&self) -> bool {
         !self.viewer_only.is_some_and(|v| v)
+    }
+    pub fn write(&self) -> Result<()> {
+        let p = config_dir();
+        let config = p.join("config.toml");
+        if !p.exists() {
+            fs::create_dir_all(&p)?;
+        }
+        fs::File::options()
+            .write(true)
+            .truncate(true)
+            .open(config)?
+            .write_all(&to_string_pretty(&self)?.as_bytes())?;
+        Ok(())
     }
 }
