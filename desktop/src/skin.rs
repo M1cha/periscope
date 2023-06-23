@@ -1,9 +1,10 @@
 use crate::config::config_dir;
 use anyhow::Result;
-use image::{io::Reader, RgbaImage};
+use image::io::Reader;
 use macroquad::texture::Texture2D;
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashMap,
     fs,
     path::{Path, PathBuf},
 };
@@ -27,7 +28,7 @@ impl Skin {
         let cfg = ConfigSkin::open(base.join("skin.toml"))?;
         Ok(Self {
             background: load_image(base.join(&cfg.background))?,
-            buttons: Buttons::from_cfg(&cfg.buttons, &base)?,
+            buttons: buttons_from_cfg(&cfg.buttons, &base)?,
             ls: Stick::from_cfg(&cfg.ls, &base)?,
             rs: Stick::from_cfg(&cfg.rs, &base)?,
         })
@@ -44,32 +45,34 @@ impl Stick {
     }
 }
 
-impl Buttons {
-    fn from_cfg(cfg: &ConfigButtons, base: &Path) -> Result<Self> {
-        Ok(Self {
-            a: Button::from_cfg(&cfg.a, &base)?,
-            b: Button::from_cfg(&cfg.b, &base)?,
-            x: Button::from_cfg(&cfg.x, &base)?,
-            y: Button::from_cfg(&cfg.y, &base)?,
-            plus: Button::from_cfg(&cfg.plus, &base)?,
-            minus: Button::from_cfg(&cfg.minus, &base)?,
-            home: Button::from_cfg(&cfg.home, &base)?,
-            cap: Button::from_cfg(&cfg.cap, &base)?,
-            zl: Button::from_cfg(&cfg.zl, &base)?,
-            zr: Button::from_cfg(&cfg.zr, &base)?,
-            l: Button::from_cfg(&cfg.l, &base)?,
-            r: Button::from_cfg(&cfg.r, &base)?,
-            up: Button::from_cfg(&cfg.up, &base)?,
-            down: Button::from_cfg(&cfg.down, &base)?,
-            left: Button::from_cfg(&cfg.left, &base)?,
-            right: Button::from_cfg(&cfg.right, &base)?,
-            ls: Button::from_cfg(&cfg.ls, &base)?,
-            rs: Button::from_cfg(&cfg.rs, &base)?,
-        })
-    }
+fn buttons_from_cfg(
+    cfg: &ConfigButtons,
+    base: &Path,
+) -> Result<HashMap<ButtonType, ButtonDisplay>> {
+    use ButtonType::*;
+    let mut r = HashMap::new();
+    r.insert(A, ButtonDisplay::from_cfg(&cfg.a, &base)?);
+    r.insert(B, ButtonDisplay::from_cfg(&cfg.b, &base)?);
+    r.insert(X, ButtonDisplay::from_cfg(&cfg.x, &base)?);
+    r.insert(Y, ButtonDisplay::from_cfg(&cfg.y, &base)?);
+    r.insert(Plus, ButtonDisplay::from_cfg(&cfg.plus, &base)?);
+    r.insert(Minus, ButtonDisplay::from_cfg(&cfg.minus, &base)?);
+    r.insert(Home, ButtonDisplay::from_cfg(&cfg.home, &base)?);
+    r.insert(Cap, ButtonDisplay::from_cfg(&cfg.cap, &base)?);
+    r.insert(Zl, ButtonDisplay::from_cfg(&cfg.zl, &base)?);
+    r.insert(Zr, ButtonDisplay::from_cfg(&cfg.zr, &base)?);
+    r.insert(L, ButtonDisplay::from_cfg(&cfg.l, &base)?);
+    r.insert(R, ButtonDisplay::from_cfg(&cfg.r, &base)?);
+    r.insert(Up, ButtonDisplay::from_cfg(&cfg.up, &base)?);
+    r.insert(Down, ButtonDisplay::from_cfg(&cfg.down, &base)?);
+    r.insert(Left, ButtonDisplay::from_cfg(&cfg.left, &base)?);
+    r.insert(Right, ButtonDisplay::from_cfg(&cfg.right, &base)?);
+    r.insert(Ls, ButtonDisplay::from_cfg(&cfg.ls, &base)?);
+    r.insert(Rs, ButtonDisplay::from_cfg(&cfg.rs, &base)?);
+    Ok(r)
 }
 
-impl Button {
+impl ButtonDisplay {
     fn from_cfg(cfg: &ConfigButton, base: &Path) -> Result<Self> {
         Ok(Self {
             pos: cfg.pos,
@@ -86,8 +89,8 @@ impl ConfigSkin {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Pos {
-    x: i32,
-    y: i32,
+    pub x: f32,
+    pub y: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -134,40 +137,56 @@ struct ConfigStick {
 }
 
 pub struct Skin {
-    background: Texture2D,
-    buttons: Buttons,
-    ls: Stick,
-    rs: Stick,
+    pub background: Texture2D,
+    pub buttons: HashMap<ButtonType, ButtonDisplay>,
+    pub ls: Stick,
+    pub rs: Stick,
 }
 
-pub struct Buttons {
-    a: Button,
-    b: Button,
-    x: Button,
-    y: Button,
-    plus: Button,
-    minus: Button,
-    home: Button,
-    cap: Button,
-    zl: Button,
-    zr: Button,
-    l: Button,
-    r: Button,
-    up: Button,
-    down: Button,
-    left: Button,
-    right: Button,
-    ls: Button,
-    rs: Button,
+#[derive(PartialEq, Eq, Hash)]
+pub enum ButtonType {
+    A,
+    B,
+    X,
+    Y,
+    Plus,
+    Minus,
+    Home,
+    Cap,
+    Zl,
+    Zr,
+    L,
+    R,
+    Up,
+    Down,
+    Left,
+    Right,
+    Ls,
+    Rs,
 }
 
-pub struct Button {
-    tex: Texture2D,
-    pos: Pos,
+pub struct ButtonDisplay {
+    pub tex: Texture2D,
+    pub pos: Pos,
 }
 
 pub struct Stick {
-    tex: Texture2D,
-    pos: Pos,
-    range: u32,
+    pub tex: Texture2D,
+    pub pos: Pos,
+    pub range: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Background {
+    background: String,
+}
+
+pub fn bg_dims(name: &str) -> Result<(i32, i32)> {
+    let mut p = config_dir().join(name).join("skin.toml");
+    let bg: Background = from_str(&fs::read_to_string(&p)?)?;
+    p.pop();
+    let i = Reader::open(p.join(bg.background))?
+        .with_guessed_format()?
+        .decode()?;
+    Ok((i.width() as i32, i.height() as i32))
 }
