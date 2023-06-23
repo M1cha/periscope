@@ -1,9 +1,13 @@
 use crate::{
     config::Config,
+    net::{run_net, ControllerState},
     skin::{bg_dims, Skin},
 };
 use anyhow::Result;
+use crossbeam_channel::unbounded;
+use crossbeam_queue::ArrayQueue;
 use macroquad::{prelude::*, Window};
+use std::sync::Arc;
 
 fn gen_conf(dims: (i32, i32)) -> Conf {
     Conf {
@@ -17,16 +21,24 @@ fn gen_conf(dims: (i32, i32)) -> Conf {
 
 pub fn run_viewer(cfg: Config) -> Result<()> {
     let dims = bg_dims(cfg.skin.as_ref().unwrap())?;
-    Window::from_config(gen_conf(dims), async {
-        if let Err(e) = viewer_impl(cfg).await {
+    let (tx, rx) = unbounded();
+    let tx2 = tx.clone();
+    let q = Arc::new(ArrayQueue::new(1));
+    let addr = cfg.switch_addr.clone().unwrap();
+    let h = run_net(Arc::clone(&q), addr, rx);
+    Window::from_config(gen_conf(dims), async move {
+        if let Err(e) = viewer_impl(cfg, Arc::clone(&q)).await {
             eprintln!("{e:?}");
+            tx2.send(()).unwrap();
             std::process::exit(1);
         }
     });
+    tx.send(()).unwrap();
+    h.join().unwrap();
     Ok(())
 }
 
-async fn viewer_impl(cfg: Config) -> Result<()> {
+async fn viewer_impl(cfg: Config, queue: Arc<ArrayQueue<ControllerState>>) -> Result<()> {
     let s = Skin::open(&cfg.skin.unwrap())?;
     loop {
         clear_background(BLACK);
