@@ -1,8 +1,6 @@
 use crate::config::Config;
 use anyhow::Result;
-use image::{io::Reader, RgbaImage};
 use macroquad::{prelude::*, Window};
-use std::path::Path;
 
 fn gen_conf() -> Conf {
     Conf {
@@ -26,11 +24,4 @@ async fn viewer_impl() {
         draw_texture(tex, 0.0, 0.0, WHITE);
         next_frame().await;
     }
-}
-
-fn load_image<P: AsRef<Path>>(path: P) -> Result<RgbaImage> {
-    Ok(Reader::open(path)?
-        .with_guessed_format()?
-        .decode()?
-        .into_rgba8())
 }
