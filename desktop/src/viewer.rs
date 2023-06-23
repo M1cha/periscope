@@ -29,8 +29,8 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
 async fn viewer_impl(cfg: Config) -> Result<()> {
     let s = Skin::open(&cfg.skin.unwrap())?;
     loop {
-        clear_background(RED);
-        draw_circle(50.0, 50.0, 50.0, YELLOW);
+        clear_background(BLACK);
+        draw_texture(s.background, 0.0, 0.0, WHITE);
         next_frame().await;
     }
 }

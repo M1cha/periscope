@@ -4,6 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 
 mod cli;
 mod config;
+mod net;
 mod skin;
 mod ui;
 mod viewer;
