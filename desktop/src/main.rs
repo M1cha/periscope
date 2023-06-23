@@ -5,7 +5,9 @@ use std::{cell::RefCell, rc::Rc};
 mod cli;
 mod config;
 mod ui;
+mod viewer;
 use config::Config;
+use viewer::run_viewer;
 
 fn main() -> Result<()> {
     let args = cli::CommandLine::parse();
@@ -17,5 +19,6 @@ fn main() -> Result<()> {
     }
     let cfg = Rc::into_inner(cfg).unwrap().into_inner(); // only other ref has been dropped by now
     cfg.write()?;
+    run_viewer(cfg)?;
     Ok(())
 }
