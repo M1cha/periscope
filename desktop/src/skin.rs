@@ -57,8 +57,6 @@ fn buttons_from_cfg(
     r.insert(Y, ButtonDisplay::from_cfg(&cfg.y, &base)?);
     r.insert(Plus, ButtonDisplay::from_cfg(&cfg.plus, &base)?);
     r.insert(Minus, ButtonDisplay::from_cfg(&cfg.minus, &base)?);
-    r.insert(Home, ButtonDisplay::from_cfg(&cfg.home, &base)?);
-    r.insert(Cap, ButtonDisplay::from_cfg(&cfg.cap, &base)?);
     r.insert(Zl, ButtonDisplay::from_cfg(&cfg.zl, &base)?);
     r.insert(Zr, ButtonDisplay::from_cfg(&cfg.zr, &base)?);
     r.insert(L, ButtonDisplay::from_cfg(&cfg.l, &base)?);
@@ -109,8 +107,6 @@ struct ConfigButtons {
     y: ConfigButton,
     plus: ConfigButton,
     minus: ConfigButton,
-    home: ConfigButton,
-    cap: ConfigButton,
     zl: ConfigButton,
     zr: ConfigButton,
     l: ConfigButton,
@@ -143,7 +139,7 @@ pub struct Skin {
     pub rs: Stick,
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Deserialize)]
 pub enum ButtonType {
     A,
     B,
@@ -151,8 +147,6 @@ pub enum ButtonType {
     Y,
     Plus,
     Minus,
-    Home,
-    Cap,
     Zl,
     Zr,
     L,
