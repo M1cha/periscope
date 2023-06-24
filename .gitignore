@@ -6,3 +6,5 @@
 *.nacp
 *.ovl
 **/build/
+**/.cache/
+**/compile_commands.json

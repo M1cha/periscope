@@ -1,0 +1,15 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForIndentation
+PointerAlignment: Right
+AlignConsecutiveMacros: Consecutive
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AlignAfterOpenBracket: DontAlign
+InsertTrailingCommas: Wrapped
+IndentCaseLabels: true
+BinPackArguments: false
+ColumnLimit: 160
