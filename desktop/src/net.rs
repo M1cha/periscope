@@ -13,14 +13,14 @@ use std::{
 
 #[derive(Default)]
 pub struct ControllerState {
-    buttons: HashSet<ButtonType>,
+    bs: HashSet<ButtonType>,
     ls: StickState,
     rs: StickState,
 }
 
 #[derive(Deserialize)]
 struct Message {
-    buttons: u16,
+    bs: u32,
     ls: StickState,
     rs: StickState,
 }
@@ -49,7 +49,7 @@ pub fn run_net(
             stream.read(&mut buf).unwrap();
             if let Ok(msg) = serde_json::from_slice::<Message>(&buf) {
                 let cs = ControllerState {
-                    buttons: state_to_map(msg.buttons),
+                    bs: state_to_map(msg.bs),
                     ls: msg.ls,
                     rs: msg.rs,
                 };
@@ -66,13 +66,13 @@ pub fn run_net(
     })
 }
 
-fn state_to_map(state: u16) -> HashSet<ButtonType> {
+fn state_to_map(state: u32) -> HashSet<ButtonType> {
     use ButtonType::*;
-    const BUTTONS_ORDER: [ButtonType; 16] = [
-        A, B, X, Y, Ls, Rs, L, R, Zl, Zr, Plus, Minus, Left, Up, Right, Down,
+    const BUTTONS_ORDER: [ButtonType; 20] = [
+        A, B, X, Y, Ls, Rs, L, R, Zl, Zr, Plus, Minus, Left, Up, Right, Down, Lsl, Lsr, Rsl, Rsr,
     ];
     let mut r = HashSet::new();
-    for i in 0..=15 {
+    for i in (0..BUTTONS_ORDER.len()).map(|i| if i > 15 { i + 8 } else { i }) {
         if (state & (1 << i)) != 0 {
             r.insert(BUTTONS_ORDER[i]);
         }

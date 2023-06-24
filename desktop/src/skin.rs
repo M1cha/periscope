@@ -157,6 +157,10 @@ pub enum ButtonType {
     Right,
     Ls,
     Rs,
+    Lsl,
+    Lsr,
+    Rsl,
+    Rsr,
 }
 
 pub struct ButtonDisplay {
