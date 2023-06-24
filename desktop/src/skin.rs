@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fs,
-    io::Cursor,
     path::{Path, PathBuf},
 };
 use toml::from_str;
@@ -24,13 +23,7 @@ fn load_image<P: AsRef<Path>>(path: P) -> Result<Texture2D> {
 }
 
 fn default_image() -> Texture2D {
-    let img = Reader::new(Cursor::new(include_bytes!("default.png")))
-        .with_guessed_format()
-        .unwrap()
-        .decode()
-        .unwrap()
-        .into_rgba8();
-    Texture2D::from_rgba8(1, 1, img.as_raw())
+    Texture2D::from_rgba8(1, 1, &[0, 0, 0, 0])
 }
 
 impl Skin {
@@ -51,7 +44,11 @@ impl Stick {
         Ok(Self {
             pos: cfg.pos,
             range: cfg.range,
-            tex: load_image(base.join(&cfg.image))?,
+            tex: if cfg.image.is_empty() {
+                default_image()
+            } else {
+                load_image(base.join(&cfg.image))?
+            },
         })
     }
 }
@@ -114,7 +111,9 @@ pub struct Pos {
 struct ConfigSkin {
     background: String,
     buttons: ConfigButtons,
+    #[serde(default)]
     ls: ConfigStick,
+    #[serde(default)]
     rs: ConfigStick,
 }
 
@@ -149,7 +148,7 @@ struct ConfigButton {
     pos: Pos,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 struct ConfigStick {
     image: String,
     pos: Pos,
