@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fs,
+    io::Cursor,
     path::{Path, PathBuf},
 };
 use toml::from_str;
@@ -20,6 +21,16 @@ fn load_image<P: AsRef<Path>>(path: P) -> Result<Texture2D> {
         img.height() as u16,
         img.as_raw(),
     ))
+}
+
+fn default_image() -> Texture2D {
+    let img = Reader::new(Cursor::new(include_bytes!("default.png")))
+        .with_guessed_format()
+        .unwrap()
+        .decode()
+        .unwrap()
+        .into_rgba8();
+    Texture2D::from_rgba8(1, 1, img.as_raw())
 }
 
 impl Skin {
@@ -67,6 +78,10 @@ fn buttons_from_cfg(
     r.insert(Right, ButtonDisplay::from_cfg(&cfg.right, &base)?);
     r.insert(Ls, ButtonDisplay::from_cfg(&cfg.ls, &base)?);
     r.insert(Rs, ButtonDisplay::from_cfg(&cfg.rs, &base)?);
+    r.insert(Lsl, ButtonDisplay::from_cfg(&cfg.lsl, &base)?);
+    r.insert(Lsr, ButtonDisplay::from_cfg(&cfg.lsr, &base)?);
+    r.insert(Rsl, ButtonDisplay::from_cfg(&cfg.rsl, &base)?);
+    r.insert(Rsr, ButtonDisplay::from_cfg(&cfg.rsr, &base)?);
     Ok(r)
 }
 
@@ -74,7 +89,11 @@ impl ButtonDisplay {
     fn from_cfg(cfg: &ConfigButton, base: &Path) -> Result<Self> {
         Ok(Self {
             pos: cfg.pos,
-            tex: load_image(base.join(&cfg.image))?,
+            tex: if cfg.image.is_empty() {
+                default_image()
+            } else {
+                load_image(base.join(&cfg.image))?
+            },
         })
     }
 }
@@ -85,7 +104,7 @@ impl ConfigSkin {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default)]
 pub struct Pos {
     pub x: f32,
     pub y: f32,
@@ -99,7 +118,8 @@ struct ConfigSkin {
     rs: ConfigStick,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(default)]
 struct ConfigButtons {
     a: ConfigButton,
     b: ConfigButton,
@@ -117,9 +137,13 @@ struct ConfigButtons {
     right: ConfigButton,
     ls: ConfigButton,
     rs: ConfigButton,
+    lsl: ConfigButton,
+    lsr: ConfigButton,
+    rsl: ConfigButton,
+    rsr: ConfigButton,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 struct ConfigButton {
     image: String,
     pos: Pos,

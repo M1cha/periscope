@@ -44,6 +44,8 @@ ls = {image = "stick.png", pos = {x = 100, y = 100}, range = 50}
 # repeat for right stick
 ```
 
+if you leave a button or joystick unconfigured, it simply will not be rendered.
+
 ### building
 the viewer lives in `desktop/`, and is written in rust. you need to install cargo and rust to build it, then to build, `cargo b --release` and to run `cargo r --release`.
 
