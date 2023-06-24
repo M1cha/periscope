@@ -129,7 +129,7 @@ struct ConfigButton {
 struct ConfigStick {
     image: String,
     pos: Pos,
-    range: u32,
+    range: f32,
 }
 
 pub struct Skin {
@@ -171,7 +171,7 @@ pub struct ButtonDisplay {
 pub struct Stick {
     pub tex: Texture2D,
     pub pos: Pos,
-    pub range: u32,
+    pub range: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

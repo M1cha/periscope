@@ -27,8 +27,8 @@ struct Message {
 
 #[derive(Deserialize, Copy, Clone, Default, Debug)]
 pub struct StickState {
-    pub x: i32,
-    pub y: i32,
+    pub x: f32,
+    pub y: f32,
 }
 
 const SIXTIETH: Duration = Duration::from_millis(16);

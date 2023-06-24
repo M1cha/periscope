@@ -58,6 +58,12 @@ async fn viewer_impl(cfg: Config, queue: Arc<ArrayQueue<ControllerState>>) -> Re
             let disp = s.buttons.get(&button).unwrap();
             draw_texture(disp.tex, disp.pos.x, disp.pos.y, WHITE);
         }
+        let lxm = cs.ls.x / 32767.0 * s.ls.range;
+        let rxm = cs.rs.x / 32767.0 * s.rs.range;
+        let lym = -cs.ls.y / 32767.0 * s.ls.range;
+        let rym = -cs.rs.y / 32767.0 * s.rs.range;
+        draw_texture(s.ls.tex, s.ls.pos.x + lxm, s.ls.pos.y + lym, WHITE);
+        draw_texture(s.rs.tex, s.rs.pos.x + rxm, s.rs.pos.y + rym, WHITE);
         next_frame().await;
     }
 }
