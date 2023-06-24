@@ -1,8 +1,11 @@
 use crate::config::{config_dir, Config};
 use eframe::egui;
-use std::{cell::RefCell, fs::read_dir, rc::Rc};
+use once_cell::sync::OnceCell;
+use std::{cell::RefCell, fs::read_dir, path::Path, rc::Rc};
 
-pub fn run_ui(cfg: Rc<RefCell<Config>>) {
+static REAL_EXIT: OnceCell<bool> = OnceCell::new();
+
+pub fn run_ui(cfg: Rc<RefCell<Config>>) -> bool {
     let opts = eframe::NativeOptions {
         centered: true,
         initial_window_size: Some(egui::vec2(400.0, 200.0)),
@@ -16,6 +19,7 @@ pub fn run_ui(cfg: Rc<RefCell<Config>>) {
         Box::new(|_| Box::new(ConfigApp::new(cfg))),
     )
     .unwrap();
+    *REAL_EXIT.get().unwrap_or(&false)
 }
 
 struct ConfigApp {
@@ -25,6 +29,14 @@ struct ConfigApp {
     last_selected: usize,
     switch_addr: String,
     no_show_config: bool,
+    have_error: ConfigProblem,
+}
+
+enum ConfigProblem {
+    None,
+    Address,
+    Skin,
+    Skin2,
 }
 
 impl ConfigApp {
@@ -63,6 +75,7 @@ impl ConfigApp {
             last_selected: selected_skin,
             switch_addr,
             no_show_config: false,
+            have_error: ConfigProblem::None,
         }
     }
 }
@@ -96,7 +109,44 @@ impl eframe::App for ConfigApp {
                 self.cfg.borrow_mut().viewer_only = Some(self.no_show_config);
             }
             if ui.button("Launch viewer").clicked() {
-                frame.close();
+                if !self
+                    .cfg
+                    .borrow()
+                    .switch_addr
+                    .as_ref()
+                    .is_some_and(|a| !a.is_empty())
+                {
+                    self.have_error = ConfigProblem::Address;
+                } else if !self
+                    .cfg
+                    .borrow()
+                    .skin
+                    .as_ref()
+                    .is_some_and(|a| !a.is_empty())
+                {
+                    self.have_error = ConfigProblem::Skin;
+                } else if self.cfg.borrow().skin.as_ref().is_some()
+                    && !Path::new(&config_dir().join(self.cfg.borrow().skin.as_ref().unwrap()))
+                        .exists()
+                {
+                    // not sure it's possible to get here, but just in case...
+                    self.have_error = ConfigProblem::Skin2;
+                } else {
+                    frame.close();
+                    REAL_EXIT.set(true).unwrap();
+                }
+            }
+            match self.have_error {
+                ConfigProblem::None => {}
+                ConfigProblem::Address => {
+                    ui.label("Address cannot be empty!");
+                }
+                ConfigProblem::Skin => {
+                    ui.label("Skin cannot be empty!");
+                }
+                ConfigProblem::Skin2 => {
+                    ui.label("Skin directory does not exist!");
+                }
             }
         });
     }
