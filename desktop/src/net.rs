@@ -13,22 +13,22 @@ use std::{
 
 #[derive(Default)]
 pub struct ControllerState {
-    bs: HashSet<ButtonType>,
-    ls: StickState,
-    rs: StickState,
+    pub buttons: HashSet<ButtonType>,
+    pub ls: StickState,
+    pub rs: StickState,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Message {
     bs: u32,
     ls: StickState,
     rs: StickState,
 }
 
-#[derive(Deserialize, Copy, Clone, Default)]
+#[derive(Deserialize, Copy, Clone, Default, Debug)]
 pub struct StickState {
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 const SIXTIETH: Duration = Duration::from_millis(16);
@@ -46,14 +46,20 @@ pub fn run_net(
         loop {
             now = Instant::now();
             stream.write(b"1").unwrap(); // probably have 'commands' for sys side later, for now just Anything
-            stream.read(&mut buf).unwrap();
-            if let Ok(msg) = serde_json::from_slice::<Message>(&buf) {
+            let len = stream.read(&mut buf).unwrap();
+            let message = serde_json::from_slice::<Message>(&buf[..len]);
+            if let Ok(msg) = message {
+                let map = state_to_map(msg.bs);
+                #[cfg(debug_assertions)]
+                println!("{map:?} {:?} {:?}", msg.ls, msg.rs);
                 let cs = ControllerState {
-                    bs: state_to_map(msg.bs),
+                    buttons: map,
                     ls: msg.ls,
                     rs: msg.rs,
                 };
                 queue.force_push(cs);
+            } else if let Err(e) = message {
+                println!("{e:?}");
             }
             buf.fill(0);
             if stop.try_recv().is_ok() {

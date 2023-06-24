@@ -139,7 +139,7 @@ pub struct Skin {
     pub rs: Stick,
 }
 
-#[derive(PartialEq, Eq, Hash, Deserialize, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Deserialize, Clone, Copy, Debug)]
 pub enum ButtonType {
     A,
     B,
