@@ -41,32 +41,48 @@ pub fn run_net(
     thread::spawn(move || {
         let addr = format!("{addr}:2579"); // configurable later :)
         let mut now;
-        let mut stream = TcpStream::connect(addr).unwrap();
+        let mut stream;
         let mut buf = [0; 128];
-        loop {
-            now = Instant::now();
-            stream.write(b"1").unwrap(); // probably have 'commands' for sys side later, for now just Anything
-            let len = stream.read(&mut buf).unwrap();
-            let message = serde_json::from_slice::<Message>(&buf[..len]);
-            if let Ok(msg) = message {
-                let map = state_to_map(msg.bs);
-                #[cfg(debug_assertions)]
-                println!("{map:?} {:?} {:?}", msg.ls, msg.rs);
-                let cs = ControllerState {
-                    buttons: map,
-                    ls: msg.ls,
-                    rs: msg.rs,
-                };
-                queue.force_push(cs);
-            } else if let Err(e) = message {
-                println!("{e:?}");
-            }
-            buf.fill(0);
-            if stop.try_recv().is_ok() {
-                break;
-            }
-            if Instant::now() - now < SIXTIETH {
-                thread::sleep(Instant::now() - now);
+        'outer: loop {
+            stream = TcpStream::connect(&addr).unwrap();
+            stream
+                .set_read_timeout(Some(Duration::from_secs_f32(0.5)))
+                .unwrap();
+            stream
+                .set_write_timeout(Some(Duration::from_secs_f32(0.5)))
+                .unwrap();
+            loop {
+                now = Instant::now();
+                let e = stream.write(b"1"); // probably have 'commands' for sys side later, for now just Anything
+                if let Err(_) = e {
+                    // recreate connection if timeout or conn lost
+                    continue 'outer;
+                }
+                let len = stream.read(&mut buf);
+                if let Err(_) = len {
+                    continue 'outer;
+                }
+                let message = serde_json::from_slice::<Message>(&buf[..len.unwrap()]);
+                if let Ok(msg) = message {
+                    let map = state_to_map(msg.bs);
+                    #[cfg(debug_assertions)]
+                    println!("{map:?} {:?} {:?}", msg.ls, msg.rs);
+                    let cs = ControllerState {
+                        buttons: map,
+                        ls: msg.ls,
+                        rs: msg.rs,
+                    };
+                    queue.force_push(cs);
+                } else if let Err(e) = message {
+                    println!("{e:?}");
+                }
+                buf.fill(0);
+                if stop.try_recv().is_ok() {
+                    break 'outer;
+                }
+                if Instant::now() - now < SIXTIETH {
+                    thread::sleep(Instant::now() - now);
+                }
             }
         }
     })
