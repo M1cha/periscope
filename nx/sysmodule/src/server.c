@@ -12,7 +12,7 @@ struct sockaddr_in server_addr;
 void server_setup(void) {
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(25579);
+	server_addr.sin_port = htons(2579);
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 	while (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
 		svcSleepThread(5e+8L); // 500ms
@@ -42,5 +42,5 @@ void server_takedown(void) {
 
 int build_payload(u32 buttons, HidAnalogStickState l, HidAnalogStickState r, char *buf) {
 	memset(buf, 0, 128);
-	return snprintf(buf, 128, "{\"bs\": %d, \"ls\": {\"x\": %d, \"y\": %d}, \"rs\": {\"x\": %d, \"y\": %d}}", buttons, l.x, l.y, r.x, r.y);
+	return snprintf(buf, 128, "{\"bs\":%i,\"ls\":{\"x\":%d,\"y\":%d},\"rs\":{\"x\":%d,\"y\":%d}}", buttons, l.x, l.y, r.x, r.y);
 }

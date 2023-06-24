@@ -61,12 +61,11 @@ void __appExit(void) {
 }
 
 int main(int argc, char *argv[]) {
-	// u64 down;
-	// u32 to_send;
 	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
 	PadState pad;
-	// HidAnalogStickState l, r;
+	HidAnalogStickState l, r;
 	padInitializeDefault(&pad);
+
 	static const SocketInitConfig socketInitConfig = {
 	    .bsdsockets_version = 1,
 	    .tcp_tx_buf_size = 1024,
@@ -80,23 +79,31 @@ int main(int argc, char *argv[]) {
 	    .bsd_service_type = BsdServiceType_User,
 	};
 	socketInitialize(&socketInitConfig);
-
 	server_setup();
-	accept_conn();
-	char client_msg[100];
-	char payload[] = "foobar";
-	while (true) {
-		padUpdate(&pad);
-		// down = padGetButtons(&pad);
-		// l = padGetStickPos(&pad, 0);
-		// r = padGetStickPos(&pad, 1);
-		// to_send = (u32)down & 0x7ffffff;
-		if (read_msg(client_msg, 100) < 0) {
-			break;
+
+	char client_msg[10];
+	char payload[128] = {0};
+	u64 down;
+	u32 to_send;
+	while (appletMainLoop()) {
+		if (accept_conn() < 0) {
+			server_takedown();
+			server_setup();
+			continue;
 		}
-		// int len = build_payload(to_send, l, r, payload);
-		if (send_msg(payload, sizeof(payload)) < 0) {
-			break;
+		while (true) {
+			if (read_msg(client_msg, 10) < 0) {
+				break;
+			}
+			padUpdate(&pad);
+			down = padGetButtons(&pad);
+			l = padGetStickPos(&pad, 0);
+			r = padGetStickPos(&pad, 1);
+			to_send = (u32)down & 0xF00FFFF;
+			int len = build_payload(to_send, l, r, payload);
+			if (send_msg(payload, len) < 0) {
+				break;
+			}
 		}
 	}
 	socketExit();
