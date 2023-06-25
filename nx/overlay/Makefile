@@ -37,7 +37,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   of a homebrew executable (.nro). This is intended to be used for sysmodules.
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
-APP_TITLE	:=	Periscope Overlay
+APP_TITLE	:=	Periscope
 APP_VERSION :=	0.1.0
 
 TARGET		:=	periscope-overlay
