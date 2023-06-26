@@ -4,13 +4,25 @@
 
 Service scope;
 
+// much of this lifted from sys-clk
 Result ipc_init() {
-	Handle h = 0;
-	Result rc = svcConnectToNamedPort(&h, "scope");
-	if (R_SUCCEEDED(rc)) {
-		serviceCreate(&scope, h);
+	if (serviceIsActive(&scope)) {
+		return 0;
+	}
+	Result rc = smGetService(&scope, "scope");
+	if (R_FAILED(rc)) {
+		serviceClose(&scope);
 	}
 	return rc;
+}
+
+bool ipc_running() {
+	Handle h;
+	bool running = R_FAILED(smRegisterService(&h, smEncodeName("scope"), false, 1));
+	if (!running) {
+		smUnregisterService(smEncodeName("scope"));
+	}
+	return running;
 }
 
 int ipc_getver() {

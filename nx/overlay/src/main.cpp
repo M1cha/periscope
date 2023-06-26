@@ -5,8 +5,6 @@
 #include <string>
 #include <tesla.hpp> // The Tesla Header
 
-int theproblem = 0;
-
 class ProblemGui : public tsl::Gui {
   public:
 	ProblemGui() {}
@@ -25,9 +23,7 @@ class Problem2Gui : public tsl::Gui {
 	virtual tsl::elm::Element *createUI() override {
 		auto frame = new tsl::elm::OverlayFrame("periscope", "0.1.0");
 		auto list = new tsl::elm::List();
-		char the[6];
-		sprintf(the, "%d", theproblem);
-		auto it = new tsl::elm::ListItem("?", the);
+		auto it = new tsl::elm::ListItem("sys-scope is not running!");
 		list->addItem(it);
 		frame->setContent(list);
 		return frame;
@@ -106,11 +102,10 @@ class PeriscopeOverlay : public tsl::Overlay {
 	// libtesla already initialized fs, hid, pl, pmdmnt, hid:sys and set:sys
 	virtual void initServices() override {
 		fsdevMountSdmc();
-		Result rc = ipc_init();
-		if (R_FAILED(rc)) {
+		if (!ipc_running()) {
 			problem2 = true;
-			theproblem = R_DESCRIPTION(rc);
 		} else {
+			ipc_init();
 			if (ipc_getver() != IPCVER) {
 				problem = true;
 			}

@@ -16,6 +16,7 @@ extern "C" {
 #endif
 
 Result ipc_init();
+bool ipc_running();
 int ipc_getver();
 char *ipc_getip();
 void ipc_enablecontroller(int idx);

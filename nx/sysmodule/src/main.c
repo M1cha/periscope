@@ -51,6 +51,7 @@ void __appInit(void) {
 		diagAbortWithResult(MAKERESULT(Module_Libnx, LibnxError_InitFail_FS));
 
 	fsdevMountSdmc();
+	service_scope_init();
 
 	// Add other services you want to use here.
 
@@ -58,6 +59,7 @@ void __appInit(void) {
 }
 
 void __appExit(void) {
+	service_scope_exit();
 	fsdevUnmountAll();
 	fsExit();
 	hidExit();
@@ -93,7 +95,6 @@ int main(int argc, char *argv[]) {
 	};
 	socketInitialize(&socketInitConfig);
 	server_setup();
-	service_scope_init();
 	Thread t;
 	threadCreate(&t, service_scope_func, (void *)pads_enabled, (void *)ipc_stack, 0x1000, 0x20, -2);
 	threadStart(&t);
