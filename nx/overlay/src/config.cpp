@@ -25,6 +25,14 @@ bool Config::enabled(int idx) {
 void Config::set_enabled(int idx, bool enabled) {
 	players_enabled[idx] = enabled;
 	config_enable_player(ini, idx, enabled);
+	if (enabled && !multi) {
+		for (int i = 0; i < 8; i++) {
+			if (i != idx) {
+				players_enabled[i] = false;
+				config_enable_player(ini, i, false);
+			}
+		}
+	}
 	save();
 }
 
