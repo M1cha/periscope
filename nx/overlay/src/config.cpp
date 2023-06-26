@@ -12,6 +12,7 @@ Config::Config() {
 	for (int i = 0; i < 8; i++) {
 		players_enabled[i] = config_player_enabled(ini, i);
 	}
+	multi = config_multicap_enabled(ini);
 }
 
 void Config::save() {
@@ -36,3 +37,21 @@ void Config::set_enabled(int idx, bool enabled) {
 	save();
 }
 
+bool Config::multicap() {
+	return multi;
+}
+
+void Config::set_multicap(bool enabled) {
+	multi = enabled;
+	config_enable_multicap(ini, enabled);
+	bool disabling = false;
+	for (int i = 0; i < 8; i++) {
+		if (disabling) {
+			players_enabled[i] = false;
+			config_enable_player(ini, i, false);
+		} else if (players_enabled[i]) {
+			disabling = true;
+		}
+	}
+	save();
+}

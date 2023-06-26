@@ -11,10 +11,12 @@ class Config {
 	void save();
 	bool enabled(int idx);
 	void set_enabled(int idx, bool enabled);
-	bool multi = false;
+	bool multicap();
+	void set_multicap(bool enabled);
 
   private:
 	ini_t *ini;
+	bool multi = false;
 	bool players_enabled[8] = {false, false, false, false, false, false, false, false};
 };
 #endif // CONFIG_HPP_
