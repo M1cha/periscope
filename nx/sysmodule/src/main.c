@@ -6,6 +6,9 @@
 
 #include "server.h"
 
+#include "config.h"
+#include "ini.h"
+
 #define INNER_HEAP_SIZE 0x80000
 
 u32 __nx_applet_type = AppletType_None;
@@ -42,13 +45,11 @@ void __appInit(void) {
 	if (R_FAILED(rc))
 		diagAbortWithResult(MAKERESULT(Module_Libnx, LibnxError_InitFail_HID));
 
-	// Disable this if you don't want to use the filesystem.
-	/*rc = fsInitialize();
+	rc = fsInitialize();
 	if (R_FAILED(rc))
-	    diagAbortWithResult(MAKERESULT(Module_Libnx, LibnxError_InitFail_FS));
+		diagAbortWithResult(MAKERESULT(Module_Libnx, LibnxError_InitFail_FS));
 
-	// Disable this if you don't want to use the SD card filesystem.
-	fsdevMountSdmc();*/
+	fsdevMountSdmc();
 
 	// Add other services you want to use here.
 
@@ -56,16 +57,25 @@ void __appInit(void) {
 }
 
 void __appExit(void) {
+	fsdevUnmountAll();
+	fsExit();
 	hidExit();
 	smExit();
 }
 
 int main(int argc, char *argv[]) {
-	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-	PadState pad;
-	HidAnalogStickState l, r;
-	padInitializeDefault(&pad);
+	ini_t *config = config_load();
 
+	padConfigureInput(8, HidNpadStyleSet_NpadStandard);
+	PadState pads[8];
+	HidAnalogStickState l, r;
+
+	bool pads_enabled[8] = {0};
+
+	for (int i = 0; i < 8; i++) {
+		padInitialize(&pads[i], i);
+		pads_enabled[i] = config_player_enabled(config, i);
+	}
 	static const SocketInitConfig socketInitConfig = {
 	    .bsdsockets_version = 1,
 	    .tcp_tx_buf_size = 1024,
@@ -82,7 +92,9 @@ int main(int argc, char *argv[]) {
 	server_setup();
 
 	char client_msg[10];
-	char payload[128] = {0};
+	int client_len;
+	char payload[128] = {0}; // calculate max size for multiplayer later
+	int payload_len = 0;
 	u64 down;
 	u32 to_send;
 	while (appletMainLoop()) {
@@ -92,17 +104,27 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		while (true) {
-			if (read_msg(client_msg, 10) < 0) {
+			if ((client_len = read_msg(client_msg, 10)) < 0) {
 				break;
 			}
-			padUpdate(&pad);
-			down = padGetButtons(&pad);
-			l = padGetStickPos(&pad, 0);
-			r = padGetStickPos(&pad, 1);
-			to_send = (u32)down & 0xF00FFFF;
-			int len = build_payload(to_send, l, r, payload);
-			if (send_msg(payload, len) < 0) {
-				break;
+
+			for (int i = 0; i < 8; i++) {
+				if (pads_enabled[i]) {
+					padUpdate(&pads[i]);
+					down = padGetButtons(&pads[i]);
+					l = padGetStickPos(&pads[i], 0);
+					r = padGetStickPos(&pads[i], 1);
+					to_send = (u32)down & 0xF00FFFF;
+					payload_len += build_payload(to_send, l, r, payload);
+					// only send the first enabled for now to keep client working
+					break;
+				}
+			}
+			if (payload_len > 0) {
+				if (send_msg(payload, payload_len) < 0) {
+					break;
+				}
+				payload_len = 0;
 			}
 		}
 	}
