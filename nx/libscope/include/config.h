@@ -10,6 +10,8 @@ extern "C" {
 ini_t *config_load();
 bool config_player_enabled(ini_t *ini, int idx);
 void config_enable_player(ini_t *ini, int idx, bool enable);
+bool config_multicap_enabled(ini_t *ini);
+void config_enable_multicap(ini_t *ini, bool enable);
 void config_save(ini_t *ini);
 
 #ifdef __cplusplus

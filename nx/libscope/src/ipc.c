@@ -28,6 +28,18 @@ char *ipc_getip() {
 	return ipa;
 }
 
+void ipc_enablecontroller(int idx) {
+	serviceDispatchIn(&scope, SC_ENABLECONTROLLER, idx);
+}
+
+void ipc_disablecontroller(int idx) {
+	serviceDispatchIn(&scope, SC_DISABLECONTROLLER, idx);
+}
+
+void ipc_setmulticap(bool state) {
+	serviceDispatchIn(&scope, SC_SETMULTICAP, state);
+}
+
 void ipc_exit() {
 	serviceClose(&scope);
 }

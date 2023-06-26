@@ -28,7 +28,7 @@ ini_t *config_load() {
 bool config_player_enabled(ini_t *ini, int idx) {
 	int sect = ini_find_section(ini, "players", 0);
 	if (sect == INI_NOT_FOUND) {
-		return false;
+		sect = ini_section_add(ini, "players", 0);
 	}
 	char prop[] = "1";
 	prop[0] += idx;
@@ -42,13 +42,40 @@ bool config_player_enabled(ini_t *ini, int idx) {
 void config_enable_player(ini_t *ini, int idx, bool enable) {
 	int sect = ini_find_section(ini, "players", 0);
 	if (sect == INI_NOT_FOUND) {
-		ini_section_add(ini, "players", 0);
+		sect = ini_section_add(ini, "players", 0);
 	}
 	char prop[] = "1";
 	prop[0] += idx;
 	int prop_num = ini_find_property(ini, sect, prop, 0);
 	if (prop_num == INI_NOT_FOUND) {
 		ini_property_add(ini, sect, prop, 0, enable ? "true" : "false", 0);
+	} else {
+		ini_property_value_set(ini, sect, prop_num, enable ? "true" : "false", 0);
+	}
+}
+
+bool config_multicap_enabled(ini_t *ini) {
+	int sect = ini_find_section(ini, "config", 0);
+	if (sect == INI_NOT_FOUND) {
+		sect = ini_section_add(ini, "config", 0);
+	}
+	int prop_num = ini_find_property(ini, sect, "multi_controller", 0);
+	if (prop_num == INI_NOT_FOUND) {
+		ini_property_add(ini, sect, "multi_controller", 0, "false", 0);
+		return false;
+	} else {
+		return strstr(ini_property_value(ini, sect, prop_num), "true") != NULL;
+	}
+}
+
+void config_enable_multicap(ini_t *ini, bool enable) {
+	int sect = ini_find_section(ini, "config", 0);
+	if (sect == INI_NOT_FOUND) {
+		sect = ini_section_add(ini, "config", 0);
+	}
+	int prop_num = ini_find_property(ini, sect, "multi_controller", 0);
+	if (prop_num == INI_NOT_FOUND) {
+		ini_property_add(ini, sect, "multi_controller", 0, enable ? "true" : "false", 0);
 	} else {
 		ini_property_value_set(ini, sect, prop_num, enable ? "true" : "false", 0);
 	}

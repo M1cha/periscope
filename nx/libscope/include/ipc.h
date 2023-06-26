@@ -5,8 +5,7 @@
 enum ScopeCmd {
 	SC_ENABLECONTROLLER,
 	SC_DISABLECONTROLLER,
-	SC_ENABLEMULTICAP,
-	SC_DISABLEMULTICAP,
+	SC_SETMULTICAP,
 	SC_GETIP,
 
 	SC_GETVER = 1000,
@@ -19,6 +18,9 @@ extern "C" {
 Result ipc_init();
 int ipc_getver();
 char *ipc_getip();
+void ipc_enablecontroller(int idx);
+void ipc_disablecontroller(int idx);
+void ipc_setmulticap(bool state);
 void ipc_exit();
 #ifdef __cplusplus
 }
