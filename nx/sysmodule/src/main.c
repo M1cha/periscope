@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 					l = padGetStickPos(&pads[i], 0);
 					r = padGetStickPos(&pads[i], 1);
 					to_send = (u32)down & 0xF00FFFF;
-					payload_len += build_payload(to_send, l, r, payload);
+					payload_len += build_payload(i, to_send, l, r, payload);
 					// only send the first enabled for now to keep client working
 					break;
 				}

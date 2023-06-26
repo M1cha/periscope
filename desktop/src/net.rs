@@ -20,6 +20,7 @@ pub struct ControllerState {
 
 #[derive(Deserialize, Debug)]
 struct Message {
+    id: u8,
     bs: u32,
     ls: StickState,
     rs: StickState,
@@ -62,17 +63,19 @@ pub fn run_net(
                 if let Err(_) = len {
                     continue 'outer;
                 }
-                let message = serde_json::from_slice::<Message>(&buf[..len.unwrap()]);
+                let message = serde_json::from_slice::<Vec<Message>>(&buf[..len.unwrap()]);
                 if let Ok(msg) = message {
-                    let map = state_to_map(msg.bs);
-                    #[cfg(debug_assertions)]
-                    println!("{map:?} {:?} {:?}", msg.ls, msg.rs);
-                    let cs = ControllerState {
-                        buttons: map,
-                        ls: msg.ls,
-                        rs: msg.rs,
-                    };
-                    queue.force_push(cs);
+                    for state in msg {
+                        let map = state_to_map(state.bs);
+                        #[cfg(debug_assertions)]
+                        println!("{map:?} {:?} {:?}", state.ls, state.rs);
+                        let cs = ControllerState {
+                            buttons: map,
+                            ls: state.ls,
+                            rs: state.rs,
+                        };
+                        queue.force_push(cs);
+                    }
                 } else if let Err(e) = message {
                     println!("{e:?}");
                 }
