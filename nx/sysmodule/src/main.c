@@ -5,6 +5,7 @@
 #include <switch.h>
 
 #include "server.h"
+#include "svc.h"
 
 #include "config.h"
 #include "ini.h"
@@ -63,6 +64,8 @@ void __appExit(void) {
 	smExit();
 }
 
+alignas(0x1000) u8 ipc_stack[0x1000];
+
 int main(int argc, char *argv[]) {
 	ini_t *config = config_load();
 
@@ -74,7 +77,7 @@ int main(int argc, char *argv[]) {
 
 	for (int i = 0; i < 8; i++) {
 		padInitialize(&pads[i], i);
-		pads_enabled[i] = config_player_enabled(config, i);
+		//	pads_enabled[i] = config_player_enabled(config, i);
 	}
 	static const SocketInitConfig socketInitConfig = {
 	    .bsdsockets_version = 1,
@@ -90,6 +93,10 @@ int main(int argc, char *argv[]) {
 	};
 	socketInitialize(&socketInitConfig);
 	server_setup();
+	service_scope_init();
+	Thread t;
+	threadCreate(&t, service_scope_func, (void *)pads_enabled, (void *)ipc_stack, 0x1000, 0x20, -2);
+	threadStart(&t);
 
 	char client_msg[10];
 	int client_len;

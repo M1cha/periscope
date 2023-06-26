@@ -8,5 +8,6 @@ int read_msg(char *buf, int size);
 int send_msg(char *buf, int size);
 void server_takedown(void);
 int build_payload(int id, u32 buttons, HidAnalogStickState l, HidAnalogStickState r, char *buf);
+int server_ip();
 
 #endif // SERVER_H_

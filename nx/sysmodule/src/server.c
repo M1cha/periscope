@@ -13,11 +13,17 @@ void server_setup(void) {
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(2579);
-	server_addr.sin_addr.s_addr = INADDR_ANY;
+	server_addr.sin_addr.s_addr = gethostid();
 	while (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
 		svcSleepThread(5e+8L); // 500ms
 	}
 	listen(server_fd, 1);
+}
+
+int server_ip() {
+	socklen_t len = sizeof(struct sockaddr_in);
+	getsockname(server_fd, (struct sockaddr *)&server_addr, &len);
+	return server_addr.sin_addr.s_addr;
 }
 
 int accept_conn(void) {
