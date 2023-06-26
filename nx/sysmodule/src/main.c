@@ -5,7 +5,7 @@
 #include <switch.h>
 
 #include "server.h"
-#include "svc.h"
+#include "service.h"
 
 #include "config.h"
 #include "ini.h"

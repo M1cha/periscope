@@ -1,4 +1,4 @@
-#include "svc.h"
+#include "service.h"
 #include "ipc.h"
 #include "ipc_server.h"
 #include "server.h"
@@ -13,10 +13,10 @@ void service_scope_exit() {
 	ipcServerExit(&server);
 }
 
-bool ipc_running = true;
+bool is_running = true;
 
 void service_scope_stop() {
-	ipc_running = false;
+	is_running = false;
 }
 
 Result service_handler(void *arg, const IpcServerRequest *r, u8 *out_data, size_t *out_size) {
@@ -47,7 +47,7 @@ Result service_handler(void *arg, const IpcServerRequest *r, u8 *out_data, size_
 }
 
 void service_scope_func(void *enabled_controllers) {
-	while (ipc_running) {
+	while (is_running) {
 		if (ipcServerProcess(&server, service_handler, enabled_controllers) == KERNELRESULT(Cancelled)) {
 			break;
 		}
