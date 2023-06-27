@@ -20,7 +20,7 @@ void service_scope_stop() {
 }
 
 Result service_handler(void *arg, const IpcServerRequest *r, u8 *out_data, size_t *out_size) {
-	bool *enabled_controllers = (bool *)arg;
+	rt_config *conf = (rt_config *)arg;
 	switch (r->data.cmdId) {
 		case SC_GETVER:
 			*out_size = sizeof(int);
@@ -31,13 +31,18 @@ Result service_handler(void *arg, const IpcServerRequest *r, u8 *out_data, size_
 			*(int *)out_data = server_ip();
 			break;
 		case SC_ENABLECONTROLLER:
-			if (r->data.size == sizeof(int)) {
-				enabled_controllers[*(int *)r->data.ptr] = true;
+			if (r->data.size >= sizeof(int)) {
+				conf->pads_enabled[*(int *)r->data.ptr] = true;
 			}
 			break;
 		case SC_DISABLECONTROLLER:
-			if (r->data.size == sizeof(int)) {
-				enabled_controllers[*(int *)r->data.ptr] = false;
+			if (r->data.size >= sizeof(int)) {
+				conf->pads_enabled[*(int *)r->data.ptr] = false;
+			}
+			break;
+		case SC_SETMULTICAP:
+			if (r->data.size >= sizeof(bool)) {
+				conf->multicap = *(bool *)r->data.ptr;
 			}
 			break;
 	}

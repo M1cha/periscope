@@ -47,6 +47,6 @@ void server_takedown(void) {
 }
 
 int build_payload(int id, u32 buttons, HidAnalogStickState l, HidAnalogStickState r, char *buf) {
-	memset(buf, 0, 128);
-	return snprintf(buf, 128, "[{\"id\":%d,\"bs\":%i,\"ls\":{\"x\":%d,\"y\":%d},\"rs\":{\"x\":%d,\"y\":%d}}]", id, buttons, l.x, l.y, r.x, r.y);
+	memset(buf, 0, 99);
+	return snprintf(buf, 128, "{\"id\":%d,\"bs\":%i,\"ls\":{\"x\":%d,\"y\":%d},\"rs\":{\"x\":%d,\"y\":%d}},", id, buttons, l.x, l.y, r.x, r.y);
 }

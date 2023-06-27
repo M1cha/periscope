@@ -74,12 +74,13 @@ int main(int argc, char *argv[]) {
 	padConfigureInput(8, HidNpadStyleSet_NpadStandard);
 	PadState pads[8];
 	HidAnalogStickState l, r;
+	volatile rt_config rt_conf = {0};
 
-	bool pads_enabled[8] = {0};
+	rt_conf.multicap = config_multicap_enabled(config);
 
 	for (int i = 0; i < 8; i++) {
 		padInitialize(&pads[i], i);
-		pads_enabled[i] = config_player_enabled(config, i);
+		rt_conf.pads_enabled[i] = config_player_enabled(config, i);
 	}
 	static const SocketInitConfig socketInitConfig = {
 	    .bsdsockets_version = 1,
@@ -96,13 +97,13 @@ int main(int argc, char *argv[]) {
 	socketInitialize(&socketInitConfig);
 	server_setup();
 	Thread t;
-	threadCreate(&t, service_scope_func, (void *)pads_enabled, (void *)ipc_stack, 0x1000, 0x20, -2);
+	threadCreate(&t, service_scope_func, (void *)rt_conf.pads_enabled, (void *)ipc_stack, 0x1000, 0x20, -2);
 	threadStart(&t);
 
 	char client_msg[10];
 	int client_len;
-	char payload[128] = {0}; // calculate max size for multiplayer later
-	int payload_len = 0;
+	char payload[810] = {'[', 0};
+	int payload_len = 1;
 	u64 down;
 	u32 to_send;
 	while (appletMainLoop()) {
@@ -117,22 +118,24 @@ int main(int argc, char *argv[]) {
 			}
 
 			for (int i = 0; i < 8; i++) {
-				if (pads_enabled[i]) {
+				if (rt_conf.pads_enabled[i]) {
 					padUpdate(&pads[i]);
 					down = padGetButtons(&pads[i]);
 					l = padGetStickPos(&pads[i], 0);
 					r = padGetStickPos(&pads[i], 1);
 					to_send = (u32)down & 0xF00FFFF;
-					payload_len += build_payload(i, to_send, l, r, payload);
-					// only send the first enabled for now to keep client working
-					break;
+					payload_len += build_payload(i, to_send, l, r, &payload[payload_len]);
+					if (!rt_conf.multicap) {
+						break;
+					}
 				}
 			}
+			payload[payload_len - 1] = ']';
 			if (payload_len > 0) {
 				if (send_msg(payload, payload_len) < 0) {
 					break;
 				}
-				payload_len = 0;
+				payload_len = 1;
 			}
 		}
 	}
