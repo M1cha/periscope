@@ -56,11 +56,13 @@ bool Config::multicap() {
 void Config::set_multicap(bool enabled) {
 	multi = enabled;
 	config_enable_multicap(ini, enabled);
+	ipc_setmulticap(enabled);
 	bool disabling = false;
 	for (int i = 0; i < 8; i++) {
 		if (disabling) {
 			players_enabled[i] = false;
 			config_enable_player(ini, i, false);
+			ipc_disablecontroller(i);
 		} else if (players_enabled[i]) {
 			disabling = true;
 		}
