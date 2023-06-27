@@ -1,34 +1,10 @@
 #define TESLA_INIT_IMPL // If you have more than one file using the tesla header, only define this in the main one
 #include "config.hpp"
+#include "error.hpp"
 #include "ipc.h"
 #include <stdio.h>
 #include <string>
 #include <tesla.hpp> // The Tesla Header
-
-class ProblemGui : public tsl::Gui {
-  public:
-	ProblemGui() {}
-	virtual tsl::elm::Element *createUI() override {
-		auto frame = new tsl::elm::OverlayFrame("periscope", "0.1.0");
-		auto list = new tsl::elm::List();
-		auto it = new tsl::elm::ListItem("Overlay and sysmodule versions don't match!");
-		list->addItem(it);
-		frame->setContent(list);
-		return frame;
-	}
-};
-class Problem2Gui : public tsl::Gui {
-  public:
-	Problem2Gui() {}
-	virtual tsl::elm::Element *createUI() override {
-		auto frame = new tsl::elm::OverlayFrame("periscope", "0.1.0");
-		auto list = new tsl::elm::List();
-		auto it = new tsl::elm::ListItem("sys-scope is not running!");
-		list->addItem(it);
-		frame->setContent(list);
-		return frame;
-	}
-};
 
 class PeriscopeGui : public tsl::Gui {
   public:
@@ -121,9 +97,9 @@ class PeriscopeOverlay : public tsl::Overlay {
 
 	virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
 		if (problem2)
-			return initially<Problem2Gui>();
+			return initially<ErrorGui>("sys-scope is not running!");
 		if (problem)
-			return initially<ProblemGui>();
+			return initially<ErrorGui>("overlay and sysmodule versions don't match!");
 		return initially<PeriscopeGui>(); // Initial Gui to load. It's possible to pass arguments to it's constructor like this
 	}
 };
