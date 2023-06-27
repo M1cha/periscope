@@ -25,6 +25,10 @@ ini_t *config_load() {
 	}
 }
 
+void config_destroy(ini_t *ini) {
+	ini_destroy(ini);
+}
+
 bool config_player_enabled(ini_t *ini, int idx) {
 	int sect = ini_find_section(ini, "players", 0);
 	if (sect == INI_NOT_FOUND) {
