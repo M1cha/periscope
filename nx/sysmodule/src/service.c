@@ -21,10 +21,8 @@ void service_scope_stop() {
 
 Result service_handler(void *arg, const IpcServerRequest *r, u8 *out_data, size_t *out_size) {
 	bool *enabled_controllers = (bool *)arg;
-	enabled_controllers[0] = true;
 	switch (r->data.cmdId) {
 		case SC_GETVER:
-			enabled_controllers[0] = !enabled_controllers[0];
 			*out_size = sizeof(int);
 			*(int *)out_data = IPCVER;
 			break;

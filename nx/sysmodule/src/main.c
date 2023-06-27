@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 
 	for (int i = 0; i < 8; i++) {
 		padInitialize(&pads[i], i);
-		//	pads_enabled[i] = config_player_enabled(config, i);
+		pads_enabled[i] = config_player_enabled(config, i);
 	}
 	static const SocketInitConfig socketInitConfig = {
 	    .bsdsockets_version = 1,
