@@ -38,7 +38,7 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
     Ok(())
 }
 
-async fn viewer_impl(cfg: Config, queue: Arc<ArrayQueue<ControllerState>>) -> Result<()> {
+async fn viewer_impl(cfg: Config, queue: Arc<ArrayQueue<Vec<ControllerState>>>) -> Result<()> {
     let s = Skin::open(&cfg.skin.unwrap())?;
     let mut cs = ControllerState::default();
     let mut no_frames = 0;
@@ -46,7 +46,7 @@ async fn viewer_impl(cfg: Config, queue: Arc<ArrayQueue<ControllerState>>) -> Re
         clear_background(BLACK);
         draw_texture(s.background, 0.0, 0.0, WHITE);
         if let Some(frame) = queue.pop() {
-            cs = frame;
+            cs = frame[0].clone();
             no_frames = 0;
         } else {
             no_frames += 1;

@@ -11,7 +11,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ControllerState {
     pub buttons: HashSet<ButtonType>,
     pub ls: StickState,
@@ -35,7 +35,7 @@ pub struct StickState {
 const SIXTIETH: Duration = Duration::from_millis(16);
 
 pub fn run_net(
-    queue: Arc<ArrayQueue<ControllerState>>,
+    queue: Arc<ArrayQueue<Vec<ControllerState>>>,
     addr: String,
     stop: Receiver<()>,
 ) -> JoinHandle<()> {
@@ -43,7 +43,7 @@ pub fn run_net(
         let addr = format!("{addr}:2579"); // configurable later :)
         let mut now;
         let mut stream;
-        let mut buf = [0; 128];
+        let mut buf = [0; 810];
         'outer: loop {
             stream = TcpStream::connect(&addr).unwrap();
             stream
@@ -65,17 +65,21 @@ pub fn run_net(
                 }
                 let message = serde_json::from_slice::<Vec<Message>>(&buf[..len.unwrap()]);
                 if let Ok(msg) = message {
-                    for state in msg {
-                        let map = state_to_map(state.bs);
-                        #[cfg(debug_assertions)]
-                        println!("{map:?} {:?} {:?}", state.ls, state.rs);
-                        let cs = ControllerState {
-                            buttons: map,
-                            ls: state.ls,
-                            rs: state.rs,
-                        };
-                        queue.force_push(cs);
-                    }
+                    let cstates = msg
+                        .iter()
+                        .map(|state| {
+                            let map = state_to_map(state.bs);
+                            #[cfg(debug_assertions)]
+                            println!("{map:?} {:?} {:?}", state.ls, state.rs);
+                            let cs = ControllerState {
+                                buttons: map,
+                                ls: state.ls,
+                                rs: state.rs,
+                            };
+                            cs
+                        })
+                        .collect::<Vec<_>>();
+                    queue.force_push(cstates);
                 } else if let Err(e) = message {
                     println!("{e:?}");
                 }
