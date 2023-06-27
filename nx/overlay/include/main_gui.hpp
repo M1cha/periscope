@@ -5,14 +5,11 @@
 
 class MainGui : public tsl::Gui {
   public:
-	MainGui();
+	MainGui(Config *config);
 	virtual tsl::elm::Element *createUI() override;
-	virtual void update() override;
-	virtual bool handleInput(
-	    u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override;
 
   private:
-	Config cfg;
+	Config *cfg;
 	tsl::elm::List *list;
 };
 

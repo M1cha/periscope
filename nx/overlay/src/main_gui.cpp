@@ -1,11 +1,13 @@
 #include "main_gui.hpp"
 #include "config.hpp"
 #include "ipc.h"
+#include "player_gui.hpp"
 #include <string>
+#include <switch.h>
 #include <tesla.hpp>
 
-MainGui::MainGui() {
-	cfg = Config();
+MainGui::MainGui(Config *config) {
+	cfg = config;
 }
 
 tsl::elm::Element *MainGui::createUI() {
@@ -14,29 +16,19 @@ tsl::elm::Element *MainGui::createUI() {
 	char *ip = ipc_getip();
 	auto ip_el = new tsl::elm::ListItem("IP: ", ip);
 	list->addItem(ip_el);
-	auto multitoggle = new tsl::elm::ToggleListItem("Multi-controller", cfg.multicap(), "Enabled", "Disabled");
-	multitoggle->setStateChangedListener([this](bool state) { this->cfg.set_multicap(state); });
-	list->addItem(multitoggle);
-	auto header = new tsl::elm::CategoryHeader("Enabled controllers", true);
+	auto header = new tsl::elm::CategoryHeader("Configuration", true);
 	list->addItem(header);
-	std::string player_text = "Player 1";
-	for (int i = 0; i < 8; i++) {
-		auto el = new tsl::elm::ToggleListItem(player_text, this->cfg.enabled(i), "On", "");
-		el->setStateChangedListener([this, i](bool state) { this->cfg.set_enabled(i, state); });
-		list->addItem(el);
-		player_text[7]++;
-	}
+	auto player_el = new tsl::elm::ListItem("Controllers");
+	Config *c = cfg;
+	player_el->setClickListener([c](u64 keys) {
+		if (keys & HidNpadButton_A) {
+			tsl::changeTo<PlayerGui>(c);
+			return true;
+		}
+		return false;
+	});
+	list->addItem(player_el);
 	frame->setContent(list);
 	return frame;
 }
 
-void MainGui::update() {
-	for (int i = 3; i < 11; i++) {
-		static_cast<tsl::elm::ToggleListItem *>(list->getItemAtIndex(i))->setState(cfg.enabled(i - 3));
-	}
-}
-
-bool MainGui::handleInput(
-    u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) {
-	return false;
-}

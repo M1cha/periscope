@@ -8,6 +8,7 @@
 class Config {
   public:
 	Config();
+	~Config();
 	void save();
 	bool enabled(int idx);
 	void set_enabled(int idx, bool enabled);

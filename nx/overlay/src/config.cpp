@@ -15,6 +15,11 @@ Config::Config() {
 	multi = config_multicap_enabled(ini);
 }
 
+Config::~Config() {
+	save();
+	config_destroy(ini);
+}
+
 void Config::save() {
 	config_save(ini);
 }

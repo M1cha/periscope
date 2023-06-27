@@ -9,9 +9,11 @@ class PeriscopeOverlay : public tsl::Overlay {
   public:
 	bool problem = false;
 	bool problem2 = false;
+	Config *config;
 	// libtesla already initialized fs, hid, pl, pmdmnt, hid:sys and set:sys
 	virtual void initServices() override {
 		fsdevMountSdmc();
+		// conf = Config();
 		if (!ipc_running()) {
 			problem2 = true;
 		} else {
@@ -30,11 +32,12 @@ class PeriscopeOverlay : public tsl::Overlay {
 	virtual void onHide() override {} // Called before overlay wants to change from visible to invisible state
 
 	virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
+		config = new Config();
 		if (problem2)
 			return initially<ErrorGui>("sys-scope is not running!");
 		if (problem)
 			return initially<ErrorGui>("overlay and sysmodule versions don't match!");
-		return initially<MainGui>(); // Initial Gui to load. It's possible to pass arguments to it's constructor like this
+		return initially<MainGui>(config); // Initial Gui to load. It's possible to pass arguments to it's constructor like this
 	}
 };
 
