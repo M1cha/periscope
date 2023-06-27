@@ -5,17 +5,17 @@
 
 IpcServer server;
 
-void service_scope_init() {
+void service_scope_init(void) {
 	ipcServerInit(&server, "scope", 2);
 }
 
-void service_scope_exit() {
+void service_scope_exit(void) {
 	ipcServerExit(&server);
 }
 
 bool is_running = true;
 
-void service_scope_stop() {
+void service_scope_stop(void) {
 	is_running = false;
 }
 
@@ -49,9 +49,9 @@ Result service_handler(void *arg, const IpcServerRequest *r, u8 *out_data, size_
 	return 0; // idfk
 }
 
-void service_scope_func(void *enabled_controllers) {
+void service_scope_func(void *rt_conf) {
 	while (is_running) {
-		if (ipcServerProcess(&server, service_handler, enabled_controllers) == KERNELRESULT(Cancelled)) {
+		if (ipcServerProcess(&server, service_handler, rt_conf) == KERNELRESULT(Cancelled)) {
 			break;
 		}
 	}

@@ -15,12 +15,12 @@ void server_setup(void) {
 	server_addr.sin_port = htons(2579);
 	server_addr.sin_addr.s_addr = gethostid();
 	while (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-		svcSleepThread(5e+8L); // 500ms
+		svcSleepThread(50000000ULL); // 500ms
 	}
 	listen(server_fd, 1);
 }
 
-int server_ip() {
+int server_ip(void) {
 	socklen_t len = sizeof(struct sockaddr_in);
 	getsockname(server_fd, (struct sockaddr *)&server_addr, &len);
 	return server_addr.sin_addr.s_addr;

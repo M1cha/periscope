@@ -7,7 +7,7 @@
 #include <switch.h>
 #include <sys/stat.h>
 
-ini_t *config_load() {
+ini_t *config_load(void) {
 	FILE *f = fopen(CONFIG_PATH, "r");
 	if (f != NULL) {
 		fseek(f, 0, SEEK_END);
@@ -101,4 +101,8 @@ void config_save(ini_t *ini) {
 		fclose(f);
 	}
 	free(data);
+}
+
+ini_t *config_create(void) {
+	return ini_create(NULL);
 }

@@ -52,36 +52,6 @@ void __appInit(void) {
 
 	fsdevMountSdmc();
 	service_scope_init();
-
-	// Add other services you want to use here.
-
-	// Close the service manager session.
-}
-
-void __appExit(void) {
-	service_scope_exit();
-	fsdevUnmountAll();
-	fsExit();
-	hidExit();
-	smExit();
-}
-
-alignas(0x1000) u8 ipc_stack[0x1000];
-
-int main(int argc, char *argv[]) {
-	ini_t *config = config_load();
-
-	padConfigureInput(8, HidNpadStyleSet_NpadStandard);
-	PadState pads[8];
-	HidAnalogStickState l, r;
-	volatile rt_config rt_conf = {0};
-
-	rt_conf.multicap = config_multicap_enabled(config);
-
-	for (int i = 0; i < 8; i++) {
-		padInitialize(&pads[i], i);
-		rt_conf.pads_enabled[i] = config_player_enabled(config, i);
-	}
 	static const SocketInitConfig socketInitConfig = {
 	    .bsdsockets_version = 1,
 	    .tcp_tx_buf_size = 1024,
@@ -95,10 +65,37 @@ int main(int argc, char *argv[]) {
 	    .bsd_service_type = BsdServiceType_User,
 	};
 	socketInitialize(&socketInitConfig);
-	server_setup();
+}
+
+void __appExit(void) {
+	socketExit();
+	service_scope_exit();
+	fsdevUnmountAll();
+	fsExit();
+	hidExit();
+	smExit();
+}
+
+int main(int argc, char *argv[]) {
+	ini_t *config = config_load();
+
+	padConfigureInput(8, HidNpadStyleSet_NpadStandard);
+	PadState pads[8];
+	HidAnalogStickState l, r;
+
+	volatile rt_config rt_conf = {0};
+	rt_conf.multicap = config_multicap_enabled(config);
+
+	for (int i = 0; i < 8; i++) {
+		padInitialize(&pads[i], i);
+		rt_conf.pads_enabled[i] = config_player_enabled(config, i);
+	}
+
 	Thread t;
-	threadCreate(&t, service_scope_func, (void *)rt_conf.pads_enabled, (void *)ipc_stack, 0x1000, 0x20, -2);
+	threadCreate(&t, service_scope_func, (void *)&rt_conf, NULL, 0x1000, 0x20, -2);
 	threadStart(&t);
+
+	server_setup();
 
 	char client_msg[10];
 	int client_len;
@@ -106,12 +103,14 @@ int main(int argc, char *argv[]) {
 	int payload_len = 1;
 	u64 down;
 	u32 to_send;
+
 	while (appletMainLoop()) {
 		if (accept_conn() < 0) {
 			server_takedown();
 			server_setup();
 			continue;
 		}
+
 		while (true) {
 			if ((client_len = read_msg(client_msg, 10)) < 0) {
 				break;
@@ -130,8 +129,9 @@ int main(int argc, char *argv[]) {
 					}
 				}
 			}
-			payload[payload_len - 1] = ']';
+
 			if (payload_len > 1) {
+				payload[payload_len - 1] = ']';
 				if (send_msg(payload, payload_len) < 0) {
 					break;
 				}
@@ -141,6 +141,5 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-	socketExit();
 	return 0;
 }

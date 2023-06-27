@@ -15,14 +15,14 @@ enum ScopeCmd {
 extern "C" {
 #endif
 
-Result ipc_init();
-bool ipc_running();
-int ipc_getver();
-char *ipc_getip();
+Result ipc_init(void);
+bool ipc_running(void);
+int ipc_getver(void);
+char *ipc_getip(void);
 void ipc_enablecontroller(int idx);
 void ipc_disablecontroller(int idx);
 void ipc_setmulticap(bool state);
-void ipc_exit();
+void ipc_exit(void);
 #ifdef __cplusplus
 }
 #endif

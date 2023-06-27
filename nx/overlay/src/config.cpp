@@ -10,6 +10,9 @@
 
 Config::Config() {
 	ini = config_load();
+	if (ini == NULL) {
+		ini = config_create();
+	}
 	for (int i = 0; i < 8; i++) {
 		players_enabled[i] = config_player_enabled(ini, i);
 	}
