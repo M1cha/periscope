@@ -132,12 +132,12 @@ int main(int argc, char *argv[]) {
 
 			if (payload_len > 1) {
 				payload[payload_len - 1] = ']';
-				if (send_msg(payload, payload_len) < 0) {
+				int ret = send_msg(payload, payload_len);
+				memset(&payload[1], 0, sizeof(payload) - 1);
+				payload_len = 1;
+				if (ret < 0) {
 					break;
 				}
-				memset(payload, 0, sizeof(payload));
-				payload_len = 1;
-				payload[0] = '[';
 			}
 		}
 	}
