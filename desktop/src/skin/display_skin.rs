@@ -1,30 +1,10 @@
 use crate::config::config_dir;
 use anyhow::Result;
-use image::io::Reader;
 use macroquad::texture::Texture2D;
-use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    fs,
-    path::{Path, PathBuf},
-};
-use toml::from_str;
+use serde::Deserialize;
+use std::{collections::HashMap, path::Path};
 
-fn load_image<P: AsRef<Path>>(path: P) -> Result<Texture2D> {
-    let img = Reader::open(path)?
-        .with_guessed_format()?
-        .decode()?
-        .into_rgba8();
-    Ok(Texture2D::from_rgba8(
-        img.width() as u16,
-        img.height() as u16,
-        img.as_raw(),
-    ))
-}
-
-fn default_image() -> Texture2D {
-    Texture2D::from_rgba8(1, 1, &[0, 0, 0, 0])
-}
+use super::{config_skin::*, default_image, load_image, Pos};
 
 impl Skin {
     pub fn open(name: &str) -> Result<Self> {
@@ -95,66 +75,6 @@ impl ButtonDisplay {
     }
 }
 
-impl ConfigSkin {
-    fn open(p: PathBuf) -> Result<Self> {
-        Ok(from_str(&fs::read_to_string(p)?)?)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default)]
-pub struct Pos {
-    pub x: f32,
-    pub y: f32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct ConfigSkin {
-    background: String,
-    buttons: ConfigButtons,
-    #[serde(default)]
-    ls: ConfigStick,
-    #[serde(default)]
-    rs: ConfigStick,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default)]
-#[serde(default)]
-struct ConfigButtons {
-    a: ConfigButton,
-    b: ConfigButton,
-    x: ConfigButton,
-    y: ConfigButton,
-    plus: ConfigButton,
-    minus: ConfigButton,
-    zl: ConfigButton,
-    zr: ConfigButton,
-    l: ConfigButton,
-    r: ConfigButton,
-    up: ConfigButton,
-    down: ConfigButton,
-    left: ConfigButton,
-    right: ConfigButton,
-    ls: ConfigButton,
-    rs: ConfigButton,
-    lsl: ConfigButton,
-    lsr: ConfigButton,
-    rsl: ConfigButton,
-    rsr: ConfigButton,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default)]
-struct ConfigButton {
-    image: String,
-    pos: Pos,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default)]
-struct ConfigStick {
-    image: String,
-    pos: Pos,
-    range: f32,
-}
-
 pub struct Skin {
     pub background: Texture2D,
     pub buttons: HashMap<ButtonType, ButtonDisplay>,
@@ -195,19 +115,4 @@ pub struct Stick {
     pub tex: Texture2D,
     pub pos: Pos,
     pub range: f32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Background {
-    background: String,
-}
-
-pub fn bg_dims(name: &str) -> Result<(i32, i32)> {
-    let mut p = config_dir().join(name).join("skin.toml");
-    let bg: Background = from_str(&fs::read_to_string(&p)?)?;
-    p.pop();
-    let i = Reader::open(p.join(bg.background))?
-        .with_guessed_format()?
-        .decode()?;
-    Ok((i.width() as i32, i.height() as i32))
 }
