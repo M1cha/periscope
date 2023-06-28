@@ -2,26 +2,24 @@
 homebrew solution for nintendo switch input display
 
 this is heavily inspired by openjoystickdisplay / OJDS-NX, which is implemented almost the same way. however, openjoystickdisplay has been abandonware for multiple years, and the OJDS-NX project was recently deleted.
-therefore, i have reimplemented both sides of the equation, specifically for switch, rather than the ojd general input setup.
+therefore, i have reimplemented both sides of the equation, specifically for switch, and hopefully a little bit better.
 
 ### current features
 * switch sysmodule that grabs inputs
 * desktop viewer program that connects to the switch and pulls inputs from the sysmodule
-* support for 1 player (pro controller, dual joy-con, or single joy-con (*i think*))
+* support for up to 8 players (pro controller, dual joy-con, or single joy-con (*i think*))
 * custom skin support
 * configuration dialog box
+* tesla overlay that shows switch's IP address and allows configuration of which controllers to capture
 
 ### planned features
 * a default skin to distribute with this that actually looks ok
-* better desktop configuration (e.g. make sure all the fields are actually valid before trying to start)
-* tesla overlay to get IP address as well as configure sysmodule (?)
+* better desktop configuration
 * support for gyro
 * support for accelerometer (likely difficult)
-* support for multiple players
-* support for capturing a specific player out of many
 
 ### skin configuration
-each skin lives in its own directory in the config folder (e.g. `~/.config/periscope/` on linux, idk other platforms). inside this directory
+each skin lives in its own directory in the config folder (e.g. `~/.config/periscope/` on linux, `C:\Users\YourUser\AppData\Roaming\periwinkle\periscope\` on windows). inside this directory
 is a `skin.toml` file and every image you need for the skin. you need at least a background image and one other, to use for buttons and joysticks.
 each button and joystick can be a different image, if you want. each also has a `pos`, which is where on the screen it will be displayed. x increases
 to the right and y towards the bottom, starting at the top left. joysticks also have a `range`, which is the radius of the circle that the joystick
@@ -36,27 +34,33 @@ which should be fairly self-explanatory except the last few, which are left and 
 skin.toml looks like this:
 ```toml
 background = "bg.png" # file bg.png in the same directory as this file
+[player1]
 buttons.a = {image = "button.png", pos = {x = 50, y = 50}}
 buttons.b = {image = "button.png", pos = {x = 40, y = 60}}
 # repeat for each button ...
-
 ls = {image = "stick.png", pos = {x = 100, y = 100}, range = 50}
-# repeat for right stick
+# repeat for right stick...
+
+[player2]
+# ...
 ```
 
 if you leave a button or joystick unconfigured, it simply will not be rendered.
 
 ### building
-the viewer lives in `desktop/`, and is written in rust. you need to install cargo and rust to build it, then to build, `cargo b --release` and to run `cargo r --release`.
+if you have devkita64 and cargo installed properly, you should be able to simply run `make` in the root of this repository to build the sysmodule, overlay, and desktop viewer.
 
-binary will be at target/release/periscope
+the viewer binary will be in desktop/target/release/periscope or desktop/target/debug/periscope depending on whether you build a release or debug executable.
 
-the sysmodule lives in `nx/sysmodule/`. for this, you need devkitpro and devkita64 installed, as well as libnx. then you can run `make` to build it. then, put the file called `sys-scope.nsp` onto the sd
-card of your homebrewed switch at `/atmosphere/contents/420000000005C09E/exefs.nsp`. you can put the `toolbox.json` file right next to it in that directory as well, and then use something like
-ovlSysmodule to start the module.
+the sysmodule will be at nx/sysmodule/sys-scope.nsp. put this file onto your switch SD card at `/atmosphere/contents/420000000005C09E/exefs.nsp` along with `toolbox.json`. you can then use something like ovlSysmodule
+to start it.
+
+the overlay binary will be at nx/overlay/periscope-overlay.ovl. put this in `/switch/.overlays`. you'll need tesla installed to run it, of course.
 
 ### running
-
-once you've started the module on your switch, figure out its ip address (you can find this in the internet settings). when you start periscope on your computer,
-you will be greeted with a configuration window. type the ip into the box that asks for it, and select your skin (which i hope you made), and then
+once sys-scope is running on your switch, you can use the overlay or the wifi settings to determine your IP address.
+when you start periscope on your computer, you will be greeted with a configuration window. type the ip into the box that asks for it, and select your skin (which i hope you made), and then
 click the button.
+
+### troubleshooting
+usually, you can fix the problem by stopping and restarting the sysmodule. if not, feel free to open an issue.
