@@ -4,6 +4,9 @@ homebrew solution for nintendo switch input display
 this is heavily inspired by openjoystickdisplay / OJDS-NX, which is implemented almost the same way. however, openjoystickdisplay has been abandonware for multiple years, and the OJDS-NX project was recently deleted.
 therefore, i have reimplemented both sides of the equation, specifically for switch, and hopefully a little bit better.
 
+### simple installation
+you can just get prebuild stuff from the [releases page](https://codeberg.org/periwinkle/periscope/releases). if you want to build it yourself then read on.
+
 ### current features
 * switch sysmodule that grabs inputs
 * desktop viewer program that connects to the switch and pulls inputs from the sysmodule
@@ -19,7 +22,7 @@ therefore, i have reimplemented both sides of the equation, specifically for swi
 * support for accelerometer (likely difficult)
 
 ### skin configuration
-each skin lives in its own directory in the config folder (e.g. `~/.config/periscope/` on linux, `C:\Users\YourUser\AppData\Roaming\periwinkle\periscope\` on windows). inside this directory
+each skin lives in its own directory in the config folder (e.g. `~/.config/periscope/` on linux, `C:\Users\YourUser\AppData\Roaming\periwinkle\periscope\config` on windows). inside this directory
 is a `skin.toml` file and every image you need for the skin. you need at least a background image and one other, to use for buttons and joysticks.
 each button and joystick can be a different image, if you want. each also has a `pos`, which is where on the screen it will be displayed. x increases
 to the right and y towards the bottom, starting at the top left. joysticks also have a `range`, which is the radius of the circle that the joystick
