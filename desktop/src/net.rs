@@ -64,7 +64,8 @@ pub fn run_net(
                 if let Err(_) = len {
                     continue 'outer;
                 }
-                let message = serde_json::from_slice::<Vec<Message>>(&buf[..len.unwrap()]);
+                let len = len.unwrap();
+                let message = serde_json::from_slice::<Vec<Message>>(&buf[..len]);
                 if let Ok(msg) = message {
                     let cstates = msg
                         .iter()
@@ -83,6 +84,7 @@ pub fn run_net(
                         .collect::<Vec<_>>();
                     queue.force_push(cstates);
                 } else if let Err(e) = message {
+                    println!("{}", String::from_utf8_lossy(&buf[..len]));
                     println!("{e:?}");
                 }
                 buf.fill(0);
