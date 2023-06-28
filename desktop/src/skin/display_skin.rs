@@ -12,6 +12,23 @@ impl Skin {
         let cfg = ConfigSkin::open(base.join("skin.toml"))?;
         Ok(Self {
             background: load_image(base.join(&cfg.background))?,
+            players: [
+                PlayerSkin::from_cfg(cfg.player1, &base)?,
+                PlayerSkin::from_cfg(cfg.player2, &base)?,
+                PlayerSkin::from_cfg(cfg.player3, &base)?,
+                PlayerSkin::from_cfg(cfg.player4, &base)?,
+                PlayerSkin::from_cfg(cfg.player5, &base)?,
+                PlayerSkin::from_cfg(cfg.player6, &base)?,
+                PlayerSkin::from_cfg(cfg.player7, &base)?,
+                PlayerSkin::from_cfg(cfg.player8, &base)?,
+            ],
+        })
+    }
+}
+
+impl PlayerSkin {
+    fn from_cfg(cfg: ConfigPlayer, base: &Path) -> Result<Self> {
+        Ok(Self {
             buttons: buttons_from_cfg(&cfg.buttons, &base)?,
             ls: Stick::from_cfg(&cfg.ls, &base)?,
             rs: Stick::from_cfg(&cfg.rs, &base)?,
@@ -77,6 +94,10 @@ impl ButtonDisplay {
 
 pub struct Skin {
     pub background: Texture2D,
+    pub players: [PlayerSkin; 8],
+}
+
+pub struct PlayerSkin {
     pub buttons: HashMap<ButtonType, ButtonDisplay>,
     pub ls: Stick,
     pub rs: Stick,

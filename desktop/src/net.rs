@@ -13,6 +13,7 @@ use std::{
 
 #[derive(Default, Clone)]
 pub struct ControllerState {
+    pub id: u8,
     pub buttons: HashSet<ButtonType>,
     pub ls: StickState,
     pub rs: StickState,
@@ -72,6 +73,7 @@ pub fn run_net(
                             #[cfg(debug_assertions)]
                             println!("{map:?} {:?} {:?}", state.ls, state.rs);
                             let cs = ControllerState {
+                                id: state.id,
                                 buttons: map,
                                 ls: state.ls,
                                 rs: state.rs,
