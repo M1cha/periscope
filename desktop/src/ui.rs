@@ -1,5 +1,4 @@
 use crate::config::{config_dir, Config};
-use crossbeam_channel::internal::select;
 use eframe::egui;
 use once_cell::sync::OnceCell;
 use std::{cell::RefCell, fs::read_dir, path::Path, rc::Rc};
