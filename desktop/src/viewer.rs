@@ -40,40 +40,43 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
 
 async fn viewer_impl(cfg: Config, queue: Arc<ArrayQueue<Vec<ControllerState>>>) -> Result<()> {
     let s = Skin::open(&cfg.skin.unwrap())?;
-    let mut cs = ControllerState::default();
+    let mut cs = vec![ControllerState::default(); 8];
     let mut no_frames = 0;
     loop {
         clear_background(BLACK);
         draw_texture(s.background, 0.0, 0.0, WHITE);
         if let Some(frame) = queue.pop() {
-            cs = frame[0].clone();
+            cs = frame;
             no_frames = 0;
         } else {
             no_frames += 1;
         }
-        if no_frames > 60 {
-            cs = ControllerState::default();
+        if no_frames == 60 {
+            cs = vec![ControllerState::default(); 8];
         }
-        for button in cs.buttons.iter() {
-            let disp = s.players[0].buttons.get(&button).unwrap();
-            draw_texture(disp.tex, disp.pos.x, disp.pos.y, WHITE);
+        for (i, state) in cs.iter().enumerate() {
+            for button in state.buttons.iter() {
+                let disp = s.players[i].buttons.get(&button).unwrap();
+                draw_texture(disp.tex, disp.pos.x, disp.pos.y, WHITE);
+            }
+            let lxm = state.ls.x / 32767.0 * s.players[i].ls.range;
+            let rxm = state.rs.x / 32767.0 * s.players[i].rs.range;
+            let lym = -state.ls.y / 32767.0 * s.players[i].ls.range;
+            let rym = -state.rs.y / 32767.0 * s.players[i].rs.range;
+            draw_texture(
+                s.players[i].ls.tex,
+                s.players[i].ls.pos.x + lxm,
+                s.players[i].ls.pos.y + lym,
+                WHITE,
+            );
+            draw_texture(
+                s.players[i].rs.tex,
+                s.players[i].rs.pos.x + rxm,
+                s.players[i].rs.pos.y + rym,
+                WHITE,
+            );
         }
-        let lxm = cs.ls.x / 32767.0 * s.players[0].ls.range;
-        let rxm = cs.rs.x / 32767.0 * s.players[0].rs.range;
-        let lym = -cs.ls.y / 32767.0 * s.players[0].ls.range;
-        let rym = -cs.rs.y / 32767.0 * s.players[0].rs.range;
-        draw_texture(
-            s.players[0].ls.tex,
-            s.players[0].ls.pos.x + lxm,
-            s.players[0].ls.pos.y + lym,
-            WHITE,
-        );
-        draw_texture(
-            s.players[0].rs.tex,
-            s.players[0].rs.pos.x + rxm,
-            s.players[0].rs.pos.y + rym,
-            WHITE,
-        );
+
         next_frame().await;
     }
 }
