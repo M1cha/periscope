@@ -25,7 +25,7 @@ impl Config {
     pub fn open() -> Result<Self> {
         let p = config_dir();
         let config = p.join("config.toml");
-        if !p.exists() {
+        if !config.exists() {
             fs::create_dir_all(&p)?;
             fs::File::create(&config)?;
         }
