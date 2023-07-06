@@ -27,7 +27,7 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
     let addr = cfg.switch_addr.clone().unwrap();
     let h = run_net(Arc::clone(&q), addr, rx);
     Window::from_config(gen_conf(dims), async move {
-        if let Err(e) = viewer_impl(cfg, Arc::clone(&q)).await {
+        if let Err(e) = window_loop(cfg, Arc::clone(&q)).await {
             eprintln!("{e:?}");
             tx2.send(()).unwrap();
             std::process::exit(1);
@@ -38,45 +38,51 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
     Ok(())
 }
 
-async fn viewer_impl(cfg: Config, queue: Arc<ArrayQueue<Vec<ControllerState>>>) -> Result<()> {
+async fn window_loop(cfg: Config, queue: Arc<ArrayQueue<Vec<ControllerState>>>) -> Result<()> {
     let s = Skin::open(&cfg.skin.unwrap())?;
     let mut cs = vec![ControllerState::default(); 8];
     let mut no_frames = 0;
+    let mut running_viewer = true;
     loop {
         clear_background(BLACK);
-        draw_texture(s.background, 0.0, 0.0, WHITE);
-        if let Some(frame) = queue.pop() {
-            cs = frame;
-            no_frames = 0;
-        } else {
-            no_frames += 1;
-        }
-        if no_frames == 60 {
-            cs = vec![ControllerState::default(); 8];
-        }
-        for (i, state) in cs.iter().enumerate() {
-            for button in state.buttons.iter() {
-                let disp = s.players[i].buttons.get(&button).unwrap();
-                draw_texture(disp.tex, disp.pos.x, disp.pos.y, WHITE);
+        if running_viewer {
+            if let Some(frame) = queue.pop() {
+                cs = frame;
+                no_frames = 0;
+            } else {
+                no_frames += 1;
             }
-            let lxm = state.ls.x / 32767.0 * s.players[i].ls.range;
-            let rxm = state.rs.x / 32767.0 * s.players[i].rs.range;
-            let lym = -state.ls.y / 32767.0 * s.players[i].ls.range;
-            let rym = -state.rs.y / 32767.0 * s.players[i].rs.range;
-            draw_texture(
-                s.players[i].ls.tex,
-                s.players[i].ls.pos.x + lxm,
-                s.players[i].ls.pos.y + lym,
-                WHITE,
-            );
-            draw_texture(
-                s.players[i].rs.tex,
-                s.players[i].rs.pos.x + rxm,
-                s.players[i].rs.pos.y + rym,
-                WHITE,
-            );
+            if no_frames == 60 {
+                cs = vec![ControllerState::default(); 8];
+            }
+            viewer_impl(&s, &cs[..]);
         }
-
         next_frame().await;
+    }
+}
+
+fn viewer_impl(s: &Skin, cs: &[ControllerState]) {
+    draw_texture(s.background, 0.0, 0.0, WHITE);
+    for (i, state) in cs.iter().enumerate() {
+        for button in state.buttons.iter() {
+            let disp = s.players[i].buttons.get(&button).unwrap();
+            draw_texture(disp.tex, disp.pos.x, disp.pos.y, WHITE);
+        }
+        let lxm = state.ls.x / 32767.0 * s.players[i].ls.range;
+        let rxm = state.rs.x / 32767.0 * s.players[i].rs.range;
+        let lym = -state.ls.y / 32767.0 * s.players[i].ls.range;
+        let rym = -state.rs.y / 32767.0 * s.players[i].rs.range;
+        draw_texture(
+            s.players[i].ls.tex,
+            s.players[i].ls.pos.x + lxm,
+            s.players[i].ls.pos.y + lym,
+            WHITE,
+        );
+        draw_texture(
+            s.players[i].rs.tex,
+            s.players[i].rs.pos.x + rxm,
+            s.players[i].rs.pos.y + rym,
+            WHITE,
+        );
     }
 }
