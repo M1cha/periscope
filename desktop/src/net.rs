@@ -62,9 +62,15 @@ pub fn run_net(
         let mut already_capturing = false;
         'outer: loop {
             while !already_capturing {
-                if let Ok(NetThreadMsg::StartCapture) = rx.try_recv() {
-                    already_capturing = true;
-                    break;
+                if let Ok(m) = rx.try_recv() {
+                    match m {
+                        NetThreadMsg::Exit => break 'outer,
+                        NetThreadMsg::StartCapture => {
+                            already_capturing = true;
+                            break;
+                        }
+                        _ => {}
+                    }
                 }
             }
             if let Ok(s) = TcpStream::connect_timeout(&addr, Duration::from_secs(15)) {
