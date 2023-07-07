@@ -36,7 +36,7 @@ pub struct StickState {
 pub enum NetThreadMsg {
     StartCapture,
     StopCapture,
-    Error(&'static str),
+    Error(String),
     Exit,
 }
 
@@ -55,7 +55,8 @@ pub fn run_net(
         let mut buf = [0; 810];
         let addr = addr.parse();
         if addr.is_err() {
-            tx.send(NetThreadMsg::Error("Invalid IP address!")).unwrap();
+            tx.send(NetThreadMsg::Error("Invalid IP address!".into()))
+                .unwrap();
             return;
         }
         let addr: SocketAddr = addr.unwrap();
@@ -76,8 +77,10 @@ pub fn run_net(
             if let Ok(s) = TcpStream::connect_timeout(&addr, Duration::from_secs(15)) {
                 stream = s;
             } else {
-                tx.send(NetThreadMsg::Error("Failed to connect to switch!"))
-                    .unwrap();
+                tx.send(NetThreadMsg::Error(
+                    "Failed to connect to switch! Is the IP address correct/is it on?".into(),
+                ))
+                .unwrap();
                 return;
             }
             stream

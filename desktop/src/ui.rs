@@ -123,3 +123,15 @@ impl Data {
         }
     }
 }
+
+pub fn show_error(err: &str) -> bool {
+    let mut ret = false;
+    egui_macroquad::ui(|ctx| {
+        egui::Window::new("Error!").show(ctx, |ui| {
+            ui.label(err);
+            ret = ui.button("Ok").clicked();
+        });
+    });
+    egui_macroquad::draw();
+    ret
+}

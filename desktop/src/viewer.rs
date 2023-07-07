@@ -2,7 +2,7 @@ use crate::{
     config::Config,
     net::{run_net, ControllerState, NetThreadMsg},
     skin::{bg_dims, Skin},
-    ui::{run_ui, Data},
+    ui::{run_ui, show_error, Data},
 };
 use anyhow::Result;
 use crossbeam_channel::{unbounded, Receiver, Sender};
@@ -33,8 +33,8 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
             std::process::exit(1);
         }
     });
-    tx.send(NetThreadMsg::Exit).unwrap();
-    h.join().unwrap();
+    let _ = tx.send(NetThreadMsg::Exit);
+    let _ = h.join();
     Ok(())
 }
 
@@ -42,6 +42,7 @@ enum Showing {
     ConfigUI,
     ToViewer,
     Viewer,
+    Error,
 }
 
 use Showing::*;
@@ -61,10 +62,14 @@ async fn window_loop(
         ToViewer
     };
     let mut data = Data::new(&mut cfg);
+    let mut err = String::new();
+    let dims = bg_dims(cfg.skin.as_ref().unwrap())?;
     loop {
         clear_background(BLACK);
         if let Ok(NetThreadMsg::Error(e)) = rx.try_recv() {
-            println!("{e}");
+            err = e;
+            what = Error;
+            println!("{err}");
         }
         match what {
             ConfigUI => {
@@ -74,7 +79,6 @@ async fn window_loop(
             }
             ToViewer => {
                 what = Viewer;
-                let dims = bg_dims(cfg.skin.as_ref().unwrap())?;
                 request_new_screen_size(dims.0 as f32, dims.1 as f32);
                 tx.send(NetThreadMsg::StartCapture).unwrap();
             }
@@ -90,9 +94,15 @@ async fn window_loop(
                 }
                 viewer_impl(&s, &cs[..]);
             }
+            Error => {
+                if show_error(&err) {
+                    break;
+                }
+            }
         }
         next_frame().await;
     }
+    Ok(())
 }
 
 fn viewer_impl(s: &Skin, cs: &[ControllerState]) {
