@@ -1,11 +1,11 @@
 use crate::skin::ButtonType;
-use crossbeam_channel::Receiver;
+use crossbeam_channel::{Receiver, Sender};
 use crossbeam_queue::ArrayQueue;
 use serde::Deserialize;
 use std::{
     collections::HashSet,
     io::{Read, Write},
-    net::TcpStream,
+    net::{SocketAddr, TcpStream},
     sync::Arc,
     thread::{self, JoinHandle},
     time::{Duration, Instant},
@@ -33,20 +33,47 @@ pub struct StickState {
     pub y: f32,
 }
 
+pub enum NetThreadMsg {
+    StartCapture,
+    StopCapture,
+    Error(&'static str),
+    Exit,
+}
+
 const SIXTIETH: Duration = Duration::from_millis(16);
 
 pub fn run_net(
     queue: Arc<ArrayQueue<Vec<ControllerState>>>,
     addr: String,
-    stop: Receiver<()>,
+    tx: Sender<NetThreadMsg>,
+    rx: Receiver<NetThreadMsg>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         let addr = format!("{addr}:2579"); // configurable later :)
         let mut now;
         let mut stream;
         let mut buf = [0; 810];
+        let addr = addr.parse();
+        if addr.is_err() {
+            tx.send(NetThreadMsg::Error("Invalid IP address!")).unwrap();
+            return;
+        }
+        let addr: SocketAddr = addr.unwrap();
+        let mut already_capturing = false;
         'outer: loop {
-            stream = TcpStream::connect(&addr).unwrap();
+            while !already_capturing {
+                if let Ok(NetThreadMsg::StartCapture) = rx.try_recv() {
+                    already_capturing = true;
+                    break;
+                }
+            }
+            if let Ok(s) = TcpStream::connect_timeout(&addr, Duration::from_secs(15)) {
+                stream = s;
+            } else {
+                tx.send(NetThreadMsg::Error("Failed to connect to switch!"))
+                    .unwrap();
+                return;
+            }
             stream
                 .set_read_timeout(Some(Duration::from_secs_f32(0.5)))
                 .unwrap();
@@ -88,8 +115,15 @@ pub fn run_net(
                     println!("{e:?}");
                 }
                 buf.fill(0);
-                if stop.try_recv().is_ok() {
-                    break 'outer;
+                if let Ok(m) = rx.try_recv() {
+                    match m {
+                        NetThreadMsg::Exit => break 'outer,
+                        NetThreadMsg::StopCapture => {
+                            already_capturing = false;
+                            continue 'outer;
+                        }
+                        _ => {}
+                    }
                 }
                 if Instant::now() - now < SIXTIETH {
                     thread::sleep(Instant::now() - now);
