@@ -81,6 +81,7 @@ async fn window_loop(
                 what = Viewer;
                 request_new_screen_size(dims.0 as f32, dims.1 as f32);
                 tx.send(NetThreadMsg::StartCapture).unwrap();
+                cfg.write()?;
             }
             Viewer => {
                 if let Some(frame) = queue.pop() {
