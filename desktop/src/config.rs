@@ -40,7 +40,7 @@ impl Config {
         }
         self.viewer_only = self.viewer_only.or(Some(cli.viewer_only));
     }
-    pub fn show_viewer(&self) -> bool {
+    pub fn show_config(&self) -> bool {
         !self.viewer_only.is_some_and(|v| v)
     }
     pub fn write(&self) -> Result<()> {

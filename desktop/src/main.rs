@@ -1,7 +1,6 @@
 #![windows_subsystem = "windows"]
 use anyhow::Result;
 use clap::Parser;
-use std::{cell::RefCell, rc::Rc};
 
 mod cli;
 mod config;
@@ -16,16 +15,7 @@ fn main() -> Result<()> {
     let args = cli::CommandLine::parse();
     let mut cfg = Config::open()?;
     cfg.add_cli(args);
-    let cfg = Rc::new(RefCell::new(cfg));
-    let do_viewer = if cfg.borrow().show_viewer() {
-        ui::run_ui(Rc::clone(&cfg))
-    } else {
-        true
-    };
-    let cfg = Rc::into_inner(cfg).unwrap().into_inner(); // only other ref has been dropped by now
     cfg.write()?;
-    if do_viewer {
-        run_viewer(cfg)?;
-    }
+    run_viewer(cfg)?;
     Ok(())
 }

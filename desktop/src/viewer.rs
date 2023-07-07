@@ -2,6 +2,7 @@ use crate::{
     config::Config,
     net::{run_net, ControllerState},
     skin::{bg_dims, Skin},
+    ui::{run_ui, Data},
 };
 use anyhow::Result;
 use crossbeam_channel::unbounded;
@@ -20,13 +21,12 @@ fn gen_conf(dims: (i32, i32)) -> Conf {
 }
 
 pub fn run_viewer(cfg: Config) -> Result<()> {
-    let dims = bg_dims(cfg.skin.as_ref().unwrap())?;
     let (tx, rx) = unbounded();
     let tx2 = tx.clone();
     let q = Arc::new(ArrayQueue::new(1));
     let addr = cfg.switch_addr.clone().unwrap();
     let h = run_net(Arc::clone(&q), addr, rx);
-    Window::from_config(gen_conf(dims), async move {
+    Window::from_config(gen_conf((400, 200)), async move {
         if let Err(e) = window_loop(cfg, Arc::clone(&q)).await {
             eprintln!("{e:?}");
             tx2.send(()).unwrap();
@@ -38,24 +38,49 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
     Ok(())
 }
 
-async fn window_loop(cfg: Config, queue: Arc<ArrayQueue<Vec<ControllerState>>>) -> Result<()> {
-    let s = Skin::open(&cfg.skin.unwrap())?;
+enum Showing {
+    ConfigUI,
+    ToViewer,
+    Viewer,
+}
+
+use Showing::*;
+
+async fn window_loop(mut cfg: Config, queue: Arc<ArrayQueue<Vec<ControllerState>>>) -> Result<()> {
+    let s = Skin::open(cfg.skin.as_ref().unwrap())?;
     let mut cs = vec![ControllerState::default(); 8];
     let mut no_frames = 0;
-    let mut running_viewer = true;
+    let mut what = if cfg.show_config() {
+        ConfigUI
+    } else {
+        ToViewer
+    };
+    let mut data = Data::new(&mut cfg);
     loop {
         clear_background(BLACK);
-        if running_viewer {
-            if let Some(frame) = queue.pop() {
-                cs = frame;
-                no_frames = 0;
-            } else {
-                no_frames += 1;
+        match what {
+            ConfigUI => {
+                if !run_ui(&mut cfg, &mut data) {
+                    what = ToViewer;
+                }
             }
-            if no_frames == 60 {
-                cs = vec![ControllerState::default(); 8];
+            ToViewer => {
+                what = Viewer;
+                let dims = bg_dims(cfg.skin.as_ref().unwrap())?;
+                request_new_screen_size(dims.0 as f32, dims.1 as f32);
             }
-            viewer_impl(&s, &cs[..]);
+            Viewer => {
+                if let Some(frame) = queue.pop() {
+                    cs = frame;
+                    no_frames = 0;
+                } else {
+                    no_frames += 1;
+                }
+                if no_frames == 60 {
+                    cs = vec![ControllerState::default(); 8];
+                }
+                viewer_impl(&s, &cs[..]);
+            }
         }
         next_frame().await;
     }
