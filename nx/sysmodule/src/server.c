@@ -10,20 +10,27 @@ int client_fd, server_fd;
 struct sockaddr_in server_addr;
 
 void server_setup(void) {
+	NifmInternetConnectionType ty;
+	NifmInternetConnectionStatus stat = 0;
+	u32 str;
+	while (stat != NifmInternetConnectionStatus_Connected) {
+		nifmGetInternetConnectionStatus(&ty, &str, &stat);
+		svcSleepThread(100000000LL); // 100ms
+	}
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(2579);
 	server_addr.sin_addr.s_addr = gethostid();
 	while (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-		svcSleepThread(50000000ULL); // 500ms
+		svcSleepThread(100000000LL); // 100ms
 	}
 	listen(server_fd, 1);
 }
 
 int server_ip(void) {
-	socklen_t len = sizeof(struct sockaddr_in);
-	getsockname(server_fd, (struct sockaddr *)&server_addr, &len);
-	return server_addr.sin_addr.s_addr;
+	u32 ip;
+	nifmGetCurrentIpAddress(&ip);
+	return ip;
 }
 
 int accept_conn(void) {

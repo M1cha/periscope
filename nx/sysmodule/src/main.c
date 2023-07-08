@@ -52,6 +52,7 @@ void __appInit(void) {
 
 	fsdevMountSdmc();
 	service_scope_init();
+	nifmInitialize(NifmServiceType_User);
 	static const SocketInitConfig socketInitConfig = {
 	    .bsdsockets_version = 1,
 	    .tcp_tx_buf_size = 1024,
@@ -70,6 +71,7 @@ void __appInit(void) {
 void __appExit(void) {
 	socketExit();
 	service_scope_exit();
+	nifmExit();
 	fsdevUnmountAll();
 	fsExit();
 	hidExit();
