@@ -12,7 +12,7 @@ MainGui::MainGui(Config *config) {
 }
 
 tsl::elm::Element *MainGui::createUI() {
-	auto frame = new tsl::elm::OverlayFrame("periscope", "0.1.0");
+	auto frame = new tsl::elm::OverlayFrame("periscope", "1.1.0");
 	list = new tsl::elm::List();
 	char *ip = ipc_getip();
 	auto ip_el = new tsl::elm::ListItem("IP: ", ip);

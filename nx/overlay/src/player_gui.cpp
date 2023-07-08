@@ -7,7 +7,7 @@ PlayerGui::PlayerGui(Config *config) {
 }
 
 tsl::elm::Element *PlayerGui::createUI() {
-	auto frame = new tsl::elm::OverlayFrame("periscope", "1.0.0");
+	auto frame = new tsl::elm::OverlayFrame("periscope", "1.1.0");
 	list = new tsl::elm::List();
 
 	auto multitoggle = new tsl::elm::ToggleListItem("Multi-controller", cfg->multicap(), "Enabled", "Disabled");
