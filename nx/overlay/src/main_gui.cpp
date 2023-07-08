@@ -1,4 +1,5 @@
 #include "main_gui.hpp"
+#include "proc.hpp"
 #include "config.hpp"
 #include "ipc.h"
 #include "player_gui.hpp"
@@ -28,7 +29,24 @@ tsl::elm::Element *MainGui::createUI() {
 		return false;
 	});
 	list->addItem(player_el);
+	auto header2 = new tsl::elm::CategoryHeader("Restart", true);
+	list->addItem(header2);
+	auto restart_el = new tsl::elm::ListItem("Restart sys-scope");
+	restart_el->setClickListener([this](u64 keys) {
+		bool error;
+		return restart_listener(keys, this->cfg, &error);
+	});
+	list->addItem(restart_el);
 	frame->setContent(list);
 	return frame;
 }
 
+bool MainGui::handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) {
+	if (keysDown & HidNpadButton_B) {
+		// this is so cringe but i don't Care
+		tsl::goBack();
+		tsl::goBack();
+		return true;
+	}
+	return false;
+}

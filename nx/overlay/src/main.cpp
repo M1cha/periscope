@@ -11,6 +11,7 @@ class PeriscopeOverlay : public tsl::Overlay {
 	bool problem2 = false;
 	Config *config;
 	virtual void initServices() override {
+		pmshellInitialize();
 		fsdevMountSdmc();
 		if (!ipc_running()) {
 			problem2 = true;
@@ -22,6 +23,7 @@ class PeriscopeOverlay : public tsl::Overlay {
 		}
 	}
 	virtual void exitServices() override {
+		pmshellExit();
 		fsdevUnmountAll();
 		ipc_exit();
 	}
@@ -29,9 +31,9 @@ class PeriscopeOverlay : public tsl::Overlay {
 	virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
 		config = new Config();
 		if (problem2)
-			return initially<ErrorGui>("sys-scope is not running!");
+			return initially<ErrorGui>("sys-scope is not running!", config, true);
 		if (problem)
-			return initially<ErrorGui>("overlay and sysmodule versions don't match!");
+			return initially<ErrorGui>("overlay and sysmodule versions don't match!", config);
 		return initially<MainGui>(config);
 	}
 };
