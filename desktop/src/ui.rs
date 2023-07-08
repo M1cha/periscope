@@ -37,11 +37,7 @@ pub fn run_ui(cfg: &mut Config, data: &mut Data) -> bool {
                 } else if !cfg.skin.as_ref().is_some_and(|a| !a.is_empty()) {
                     data.have_error = ConfigProblem::Skin;
                 } else if cfg.skin.as_ref().is_some()
-                    && !Path::new(
-                        &Path::new("/home/peri/.config/periscope/")
-                            .join(cfg.skin.as_ref().unwrap()),
-                    )
-                    .exists()
+                    && !Path::new(&config_dir().join(cfg.skin.as_ref().unwrap())).exists()
                 {
                     // not sure it's possible to get here, but just in case...
                     data.have_error = ConfigProblem::Skin2;
