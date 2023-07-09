@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 	u64 down;
 	u32 to_send;
 
-	while (appletMainLoop()) {
+	while (true) {
 		if (accept_conn() < 0) {
 			server_takedown();
 			server_setup();
