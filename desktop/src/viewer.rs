@@ -7,7 +7,11 @@ use crate::{
 use anyhow::Result;
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use crossbeam_queue::ArrayQueue;
-use macroquad::{prelude::*, Window};
+use macroquad::{
+    miniquad::conf::{LinuxBackend, Platform},
+    prelude::*,
+    Window,
+};
 use std::sync::Arc;
 
 fn gen_conf(dims: (i32, i32)) -> Conf {
@@ -16,6 +20,10 @@ fn gen_conf(dims: (i32, i32)) -> Conf {
         window_resizable: false,
         window_width: dims.0,
         window_height: dims.1,
+        platform: Platform {
+            linux_backend: LinuxBackend::X11WithWaylandFallback,
+            ..Default::default()
+        },
         ..Default::default()
     }
 }
