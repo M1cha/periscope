@@ -32,13 +32,15 @@ impl Config {
         Ok(from_str(&fs::read_to_string(config)?)?)
     }
     pub fn add_cli(&mut self, cli: CommandLine) {
-        if self.switch_addr.is_none() {
-            self.switch_addr = cli.switch_addr.or(Some(String::new()));
+        if cli.switch_addr.is_some() {
+            self.switch_addr = cli.switch_addr;
         }
-        if self.skin.is_none() {
+        if !cli.skin.is_empty() {
             self.skin = Some(cli.skin);
         }
-        self.viewer_only = self.viewer_only.or(Some(cli.viewer_only));
+        if cli.viewer_only {
+            self.viewer_only = Some(true);
+        }
     }
     pub fn show_config(&self) -> bool {
         !self.viewer_only.is_some_and(|v| v)
