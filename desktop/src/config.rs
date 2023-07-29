@@ -11,6 +11,7 @@ pub struct Config {
     pub switch_addr: Option<String>,
     pub skin: Option<String>,
     pub viewer_only: Option<bool>,
+    pub delay: Option<u64>,
 }
 
 static DIRS: Lazy<ProjectDirs> = Lazy::new(|| {
@@ -40,6 +41,9 @@ impl Config {
         }
         if cli.viewer_only {
             self.viewer_only = Some(true);
+        }
+        if cli.delay.is_some() {
+            self.delay = cli.delay;
         }
     }
     pub fn show_config(&self) -> bool {

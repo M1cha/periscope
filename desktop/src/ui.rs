@@ -22,6 +22,19 @@ pub fn run_ui(cfg: &mut Config, data: &mut Data) -> bool {
                 }
                 ui.label("Switch IP address");
             });
+            ui.horizontal(|ui| {
+                if ui.text_edit_singleline(&mut data.delay_str).changed() {
+                    if let Ok(n) = data.delay_str.parse::<u64>() {
+                        cfg.delay = Some(n);
+                        if data.have_error == ConfigProblem::Delay {
+                            data.have_error = ConfigProblem::None;
+                        }
+                    } else {
+                        data.have_error = ConfigProblem::Delay;
+                    }
+                }
+                ui.label("Delay");
+            });
             if ui
                 .checkbox(
                     &mut data.no_show_config,
@@ -41,12 +54,15 @@ pub fn run_ui(cfg: &mut Config, data: &mut Data) -> bool {
                 {
                     // not sure it's possible to get here, but just in case...
                     data.have_error = ConfigProblem::Skin2;
-                } else {
+                } else if data.have_error == ConfigProblem::None {
                     should_continue = false;
                 }
             }
             match data.have_error {
                 ConfigProblem::None => {}
+                ConfigProblem::Delay => {
+                    ui.label("Invalid delay!");
+                }
                 ConfigProblem::Address => {
                     ui.label("Address cannot be empty!");
                 }
@@ -68,13 +84,16 @@ pub struct Data {
     selected_skin: usize,
     last_selected: usize,
     switch_addr: String,
+    delay_str: String,
     no_show_config: bool,
     have_error: ConfigProblem,
 }
 
+#[derive(PartialEq)]
 enum ConfigProblem {
     None,
     Address,
+    Delay,
     Skin,
     Skin2,
 }
@@ -114,6 +133,7 @@ impl Data {
             selected_skin,
             last_selected: selected_skin,
             switch_addr,
+            delay_str: cfg.delay.unwrap_or(0).to_string(),
             no_show_config: false,
             have_error: ConfigProblem::None,
         }

@@ -43,13 +43,15 @@ pub enum NetThreadMsg {
 const SIXTIETH: Duration = Duration::from_millis(16);
 
 pub fn run_net(
-    queue: Arc<ArrayQueue<Vec<ControllerState>>>,
+    out_queue: Arc<ArrayQueue<Vec<ControllerState>>>,
     addr: String,
     tx: Sender<NetThreadMsg>,
     rx: Receiver<NetThreadMsg>,
+    delay: Duration,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         let addr = format!("{addr}:2579"); // configurable later :)
+        let mut wait_queue: Vec<(Instant, Vec<ControllerState>)> = Vec::new();
         let mut now;
         let mut stream;
         let mut buf = [0; 810];
@@ -62,6 +64,7 @@ pub fn run_net(
         let addr: SocketAddr = addr.unwrap();
         let mut already_capturing = false;
         'outer: loop {
+            wait_queue.clear();
             while !already_capturing {
                 if let Ok(m) = rx.try_recv() {
                     match m {
@@ -91,6 +94,16 @@ pub fn run_net(
                 .unwrap();
             loop {
                 now = Instant::now();
+                let mut i = 0;
+                while i < wait_queue.len() {
+                    if wait_queue[i].0.elapsed() >= delay {
+                        let item = wait_queue.remove(i);
+                        out_queue.force_push(item.1);
+                    } else {
+                        break;
+                    }
+                    i += 1;
+                }
                 let e = stream.write(b"1"); // probably have 'commands' for sys side later, for now just Anything
                 if let Err(_) = e {
                     // recreate connection if timeout or conn lost
@@ -118,7 +131,7 @@ pub fn run_net(
                             cs
                         })
                         .collect::<Vec<_>>();
-                    queue.force_push(cstates);
+                    wait_queue.push((now, cstates));
                 } else if let Err(e) = message {
                     println!("{}", String::from_utf8_lossy(&buf[..len]));
                     println!("{e:?}");

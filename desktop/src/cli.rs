@@ -12,4 +12,7 @@ pub struct CommandLine {
     #[arg(long)]
     /// Skip the configuration dialog and start only the viewer
     pub viewer_only: bool,
+    #[arg(long, short = 'd', value_name = "MILLISECONDS")]
+    /// Amount of time to delay the display by from real-time
+    pub delay: Option<u64>,
 }

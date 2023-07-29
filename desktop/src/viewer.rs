@@ -12,7 +12,7 @@ use macroquad::{
     prelude::*,
     Window,
 };
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 fn gen_conf(dims: (i32, i32)) -> Conf {
     Conf {
@@ -33,7 +33,8 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
     let tx2 = tx.clone();
     let q = Arc::new(ArrayQueue::new(1));
     let addr = cfg.switch_addr.clone().unwrap();
-    let h = run_net(Arc::clone(&q), addr, tx.clone(), rx.clone());
+    let delay = Duration::from_millis(cfg.delay.unwrap_or(0));
+    let h = run_net(Arc::clone(&q), addr, tx.clone(), rx.clone(), delay);
     Window::from_config(gen_conf((400, 200)), async move {
         if let Err(e) = window_loop(cfg, Arc::clone(&q), tx2.clone(), rx).await {
             eprintln!("{e:?}");
