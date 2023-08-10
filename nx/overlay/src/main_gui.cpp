@@ -1,8 +1,8 @@
 #include "main_gui.hpp"
-#include "proc.hpp"
 #include "config.hpp"
 #include "ipc.h"
 #include "player_gui.hpp"
+#include "proc.hpp"
 #include <string>
 #include <switch.h>
 #include <tesla.hpp>
@@ -12,7 +12,7 @@ MainGui::MainGui(Config *config) {
 }
 
 tsl::elm::Element *MainGui::createUI() {
-	auto frame = new tsl::elm::OverlayFrame("periscope", "1.1.0");
+	auto frame = new tsl::elm::OverlayFrame("periscope", VERSION);
 	list = new tsl::elm::List();
 	char *ip = ipc_getip();
 	auto ip_el = new tsl::elm::ListItem("IP: ", ip);

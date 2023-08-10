@@ -7,7 +7,8 @@ class MainGui : public tsl::Gui {
   public:
 	MainGui(Config *config);
 	virtual tsl::elm::Element *createUI() override;
-	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override;
+	virtual bool handleInput(
+	    u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override;
 
   private:
 	Config *cfg;

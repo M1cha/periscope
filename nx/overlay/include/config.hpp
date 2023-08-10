@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#define VERSION "1.1.1"
+
 class Config {
   public:
 	Config();

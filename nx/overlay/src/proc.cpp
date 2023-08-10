@@ -1,7 +1,7 @@
 #include "proc.hpp"
+#include "config.hpp"
 #include "ipc.h"
 #include "main_gui.hpp"
-#include "config.hpp"
 
 bool is_running(u64 program) {
 	u64 pid = 0;
