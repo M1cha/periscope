@@ -5,7 +5,7 @@ use toml::from_str;
 
 use super::Pos;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 pub(super) struct ConfigSkin {
     pub background: String,
     #[serde(default)]

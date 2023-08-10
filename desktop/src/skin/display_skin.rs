@@ -26,6 +26,24 @@ impl Skin {
     }
 }
 
+impl Default for Skin {
+    fn default() -> Self {
+        Self {
+            background: default_image(),
+            players: [
+                PlayerSkin::default(),
+                PlayerSkin::default(),
+                PlayerSkin::default(),
+                PlayerSkin::default(),
+                PlayerSkin::default(),
+                PlayerSkin::default(),
+                PlayerSkin::default(),
+                PlayerSkin::default(),
+            ],
+        }
+    }
+}
+
 impl PlayerSkin {
     fn from_cfg(cfg: ConfigPlayer, base: &Path) -> Result<Self> {
         Ok(Self {
@@ -33,6 +51,16 @@ impl PlayerSkin {
             ls: Stick::from_cfg(&cfg.ls, &base)?,
             rs: Stick::from_cfg(&cfg.rs, &base)?,
         })
+    }
+}
+
+impl Default for PlayerSkin {
+    fn default() -> Self {
+        Self {
+            buttons: HashMap::new(),
+            ls: Stick::default(),
+            rs: Stick::default(),
+        }
     }
 }
 
@@ -47,6 +75,16 @@ impl Stick {
                 load_image(base.join(&cfg.image))?
             },
         })
+    }
+}
+
+impl Default for Stick {
+    fn default() -> Self {
+        Self {
+            pos: Pos { x: 0.0, y: 0.0 },
+            range: 0.0,
+            tex: default_image(),
+        }
     }
 }
 
