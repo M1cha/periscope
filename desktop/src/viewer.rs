@@ -42,6 +42,7 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
             std::process::exit(1);
         }
     });
+    println!("Exiting...");
     let _ = tx.send(NetThreadMsg::Exit);
     let _ = h.join();
     Ok(())
@@ -62,7 +63,7 @@ async fn window_loop(
     tx: Sender<NetThreadMsg>,
     rx: Receiver<NetThreadMsg>,
 ) -> Result<()> {
-    let s = Skin::open(cfg.skin.as_ref().unwrap())?;
+    let mut s = Skin::default();
     let mut cs = vec![ControllerState::default(); 8];
     let mut no_frames = 0;
     let mut what = if cfg.show_config() {
@@ -90,6 +91,7 @@ async fn window_loop(
                 what = Viewer;
                 request_new_screen_size(dims.0 as f32, dims.1 as f32);
                 tx.send(NetThreadMsg::StartCapture).unwrap();
+                s = Skin::open(cfg.skin.as_ref().unwrap())?;
                 cfg.write()?;
             }
             Viewer => {
