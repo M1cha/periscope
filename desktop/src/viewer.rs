@@ -32,9 +32,8 @@ pub fn run_viewer(cfg: Config) -> Result<()> {
     let (tx, rx) = unbounded();
     let tx2 = tx.clone();
     let q = Arc::new(ArrayQueue::new(1));
-    let addr = cfg.switch_addr.clone().unwrap();
     let delay = Duration::from_millis(cfg.delay.unwrap_or(0));
-    let h = run_net(Arc::clone(&q), addr, tx.clone(), rx.clone(), delay);
+    let h = run_net(Arc::clone(&q), tx.clone(), rx.clone(), delay);
     Window::from_config(gen_conf((400, 200)), async move {
         if let Err(e) = window_loop(cfg, Arc::clone(&q), tx2.clone(), rx).await {
             eprintln!("{e:?}");
@@ -73,7 +72,6 @@ async fn window_loop(
     };
     let mut data = Data::new(&mut cfg);
     let mut err = String::new();
-    let dims = bg_dims(cfg.skin.as_ref().unwrap())?;
     loop {
         clear_background(BLACK);
         if let Ok(NetThreadMsg::Error(e)) = rx.try_recv() {
@@ -89,9 +87,11 @@ async fn window_loop(
             }
             ToViewer => {
                 what = Viewer;
+                let dims = bg_dims(&cfg.skin)?;
                 request_new_screen_size(dims.0 as f32, dims.1 as f32);
-                tx.send(NetThreadMsg::StartCapture).unwrap();
-                s = Skin::open(cfg.skin.as_ref().unwrap())?;
+                tx.send(NetThreadMsg::StartCapture(cfg.switch_addr.clone()))
+                    .unwrap();
+                s = Skin::open(&cfg.skin)?;
                 cfg.write()?;
             }
             Viewer => {

@@ -34,7 +34,7 @@ pub struct StickState {
 }
 
 pub enum NetThreadMsg {
-    StartCapture,
+    StartCapture(String),
     StopCapture,
     Error(String),
     Exit,
@@ -44,24 +44,17 @@ const SIXTIETH: Duration = Duration::from_millis(16);
 
 pub fn run_net(
     out_queue: Arc<ArrayQueue<Vec<ControllerState>>>,
-    addr: String,
     tx: Sender<NetThreadMsg>,
     rx: Receiver<NetThreadMsg>,
     delay: Duration,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
-        let addr = format!("{addr}:2579"); // configurable later :)
+        let mut s_addr = String::new(); //format!("{addr}:2579"); // configurable later :)
         let mut wait_queue: Vec<(Instant, Vec<ControllerState>)> = Vec::new();
         let mut now;
         let mut stream;
         let mut buf = [0; 810];
-        let addr = addr.parse();
-        if addr.is_err() {
-            tx.send(NetThreadMsg::Error("Invalid IP address!".into()))
-                .unwrap();
-            return;
-        }
-        let addr: SocketAddr = addr.unwrap();
+        let mut addr = SocketAddr::from(([0, 0, 0, 0], 2579));
         let mut already_capturing = false;
         'outer: loop {
             wait_queue.clear();
@@ -69,8 +62,16 @@ pub fn run_net(
                 if let Ok(m) = rx.try_recv() {
                     match m {
                         NetThreadMsg::Exit => break 'outer,
-                        NetThreadMsg::StartCapture => {
-                            already_capturing = true;
+                        NetThreadMsg::StartCapture(s) => {
+                            s_addr = s;
+                            let tmp_addr = s_addr.parse();
+                            if let Ok(a) = tmp_addr {
+                                addr = a;
+                                already_capturing = true;
+                            } else {
+                                tx.send(NetThreadMsg::Error("Invalid IP address!".into()))
+                                    .unwrap();
+                            }
                             break;
                         }
                         _ => {}

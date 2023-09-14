@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     let args = cli::CommandLine::parse();
     let mut cfg = Config::open()?;
     cfg.add_cli(args);
-    cfg.write()?;
+    println!("{:?}", cfg);
     run_viewer(cfg)?;
     Ok(())
 }

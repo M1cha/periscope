@@ -8,8 +8,8 @@ use toml::{from_str, to_string_pretty};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub switch_addr: Option<String>,
-    pub skin: Option<String>,
+    pub switch_addr: String,
+    pub skin: String,
     pub viewer_only: Option<bool>,
     pub delay: Option<u64>,
 }
@@ -17,6 +17,8 @@ pub struct Config {
 static DIRS: Lazy<ProjectDirs> = Lazy::new(|| {
     ProjectDirs::from("", "periwinkle", "periscope").expect("No valid home directory found!")
 });
+
+const DEFCFG: &str = "switch_addr=\"\"\nskin=\"\"\n";
 
 pub fn config_dir() -> PathBuf {
     DIRS.config_dir().to_path_buf()
@@ -30,14 +32,23 @@ impl Config {
             fs::create_dir_all(&p)?;
             fs::File::create(&config)?;
         }
-        Ok(from_str(&fs::read_to_string(config)?)?)
+        if let Ok(c) = from_str(&fs::read_to_string(&config)?) {
+            Ok(c)
+        } else {
+            fs::File::options()
+                .write(true)
+                .truncate(true)
+                .open(config)?
+                .write_all(&DEFCFG.as_bytes())?;
+            Ok(Self::default())
+        }
     }
     pub fn add_cli(&mut self, cli: CommandLine) {
         if cli.switch_addr.is_some() {
-            self.switch_addr = cli.switch_addr;
+            self.switch_addr = cli.switch_addr.unwrap();
         }
         if !cli.skin.is_empty() {
-            self.skin = Some(cli.skin);
+            self.skin = cli.skin;
         }
         if cli.viewer_only {
             self.viewer_only = Some(true);
@@ -55,11 +66,19 @@ impl Config {
         if !p.exists() {
             fs::create_dir_all(&p)?;
         }
-        fs::File::options()
-            .write(true)
-            .truncate(true)
-            .open(config)?
-            .write_all(&to_string_pretty(&self)?.as_bytes())?;
+        if !config.exists() {
+            fs::File::options()
+                .write(true)
+                .truncate(true)
+                .open(config)?
+                .write_all(&DEFCFG.as_bytes())?;
+        } else {
+            fs::File::options()
+                .write(true)
+                .truncate(true)
+                .open(config)?
+                .write_all(&to_string_pretty(&self)?.as_bytes())?;
+        }
         Ok(())
     }
 }

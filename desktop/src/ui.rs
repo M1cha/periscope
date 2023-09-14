@@ -13,12 +13,12 @@ pub fn run_ui(cfg: &mut Config, data: &mut Data) -> bool {
                 |i| data.skins[i].clone(),
             );
             if data.last_selected != data.selected_skin {
-                cfg.skin = Some(data.skins[data.selected_skin].clone());
+                cfg.skin = data.skins[data.selected_skin].clone();
                 data.last_selected = data.selected_skin;
             }
             ui.horizontal(|ui| {
                 if ui.text_edit_singleline(&mut data.switch_addr).changed() {
-                    cfg.switch_addr = Some(data.switch_addr.clone());
+                    cfg.switch_addr = data.switch_addr.clone();
                 }
                 ui.label("Switch IP address");
             });
@@ -45,12 +45,11 @@ pub fn run_ui(cfg: &mut Config, data: &mut Data) -> bool {
                 cfg.viewer_only = Some(data.no_show_config);
             }
             if ui.button("Launch viewer").clicked() {
-                if !cfg.switch_addr.as_ref().is_some_and(|a| !a.is_empty()) {
+                if cfg.switch_addr.is_empty() {
                     data.have_error = ConfigProblem::Address;
-                } else if !cfg.skin.as_ref().is_some_and(|a| !a.is_empty()) {
+                } else if cfg.skin.is_empty() {
                     data.have_error = ConfigProblem::Skin;
-                } else if cfg.skin.as_ref().is_some()
-                    && !Path::new(&config_dir().join(cfg.skin.as_ref().unwrap())).exists()
+                } else if !cfg.skin.is_empty() && !Path::new(&config_dir().join(&cfg.skin)).exists()
                 {
                     // not sure it's possible to get here, but just in case...
                     data.have_error = ConfigProblem::Skin2;
@@ -118,16 +117,13 @@ impl Data {
         if skins.is_empty() {
             skins.push(String::new());
         }
-        let switch_addr = cfg.switch_addr.clone().unwrap_or_else(String::new);
-        let selected_skin = if !cfg.skin.as_ref().unwrap().is_empty() {
-            skins
-                .iter()
-                .position(|s| s == cfg.skin.as_ref().unwrap())
-                .unwrap_or(0)
+        let switch_addr = cfg.switch_addr.clone();
+        let selected_skin = if !cfg.skin.clone().is_empty() {
+            skins.iter().position(|s| s == &cfg.skin).unwrap_or(0)
         } else {
             0
         };
-        cfg.skin = Some(skins[selected_skin].clone());
+        cfg.skin = skins[selected_skin].clone();
         Self {
             skins,
             selected_skin,
