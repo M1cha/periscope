@@ -49,7 +49,6 @@ pub fn run_net(
     delay: Duration,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
-        let mut s_addr = String::new(); //format!("{addr}:2579"); // configurable later :)
         let mut wait_queue: Vec<(Instant, Vec<ControllerState>)> = Vec::new();
         let mut now;
         let mut stream;
@@ -63,7 +62,7 @@ pub fn run_net(
                     match m {
                         NetThreadMsg::Exit => break 'outer,
                         NetThreadMsg::StartCapture(s) => {
-                            s_addr = s;
+                            let s_addr = format!("{s}:2579");
                             let tmp_addr = s_addr.parse();
                             if let Ok(a) = tmp_addr {
                                 addr = a;
