@@ -33,6 +33,7 @@ pub struct StickState {
     pub y: f32,
 }
 
+#[derive(Debug)]
 pub enum NetThreadMsg {
     StartCapture(String),
     StopCapture,
@@ -62,8 +63,7 @@ pub fn run_net(
                     match m {
                         NetThreadMsg::Exit => break 'outer,
                         NetThreadMsg::StartCapture(s) => {
-                            let s_addr = format!("{s}:2579");
-                            let tmp_addr = s_addr.parse();
+                            let tmp_addr = format!("{s}:2579").parse();
                             if let Ok(a) = tmp_addr {
                                 addr = a;
                                 already_capturing = true;
@@ -71,7 +71,6 @@ pub fn run_net(
                                 tx.send(NetThreadMsg::Error("Invalid IP address!".into()))
                                     .unwrap();
                             }
-                            break;
                         }
                         _ => {}
                     }

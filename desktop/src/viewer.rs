@@ -29,20 +29,21 @@ fn gen_conf(dims: (i32, i32)) -> Conf {
 }
 
 pub fn run_viewer(cfg: Config) -> Result<()> {
-    let (tx, rx) = unbounded();
-    let tx2 = tx.clone();
+    let (to_net, from_vwr) = unbounded();
+    let (to_vwr, from_net) = unbounded();
+    let to_net2 = to_net.clone();
     let q = Arc::new(ArrayQueue::new(1));
     let delay = Duration::from_millis(cfg.delay.unwrap_or(0));
-    let h = run_net(Arc::clone(&q), tx.clone(), rx.clone(), delay);
+    let h = run_net(Arc::clone(&q), to_vwr.clone(), from_vwr.clone(), delay);
     Window::from_config(gen_conf((400, 200)), async move {
-        if let Err(e) = window_loop(cfg, Arc::clone(&q), tx2.clone(), rx).await {
+        if let Err(e) = window_loop(cfg, Arc::clone(&q), to_net.clone(), from_net).await {
             eprintln!("{e:?}");
-            tx2.send(NetThreadMsg::Exit).unwrap();
+            to_net.send(NetThreadMsg::Exit).unwrap();
             std::process::exit(1);
         }
     });
     println!("Exiting...");
-    let _ = tx.send(NetThreadMsg::Exit);
+    let _ = to_net2.send(NetThreadMsg::Exit);
     let _ = h.join();
     Ok(())
 }
