@@ -19,6 +19,9 @@ pub fn run_ui(cfg: &mut Config, data: &mut Data) -> bool {
             ui.horizontal(|ui| {
                 if ui.text_edit_singleline(&mut data.switch_addr).changed() {
                     cfg.switch_addr = data.switch_addr.clone();
+                    if data.have_error == ConfigProblem::Address && !cfg.switch_addr.is_empty() {
+                        data.have_error = ConfigProblem::None;
+                    }
                 }
                 ui.label("Switch IP address");
             });
