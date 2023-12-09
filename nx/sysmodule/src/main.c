@@ -54,7 +54,6 @@ void __appInit(void) {
 	service_scope_init();
 	nifmInitialize(NifmServiceType_User);
 	static const SocketInitConfig socketInitConfig = {
-	    .bsdsockets_version = 1,
 	    .tcp_tx_buf_size = 1024,
 	    .tcp_rx_buf_size = 256,
 	    .tcp_tx_buf_max_size = 0,
