@@ -53,6 +53,6 @@ void server_takedown(void) {
 	close(server_fd);
 }
 
-int build_payload(int id, u32 buttons, HidAnalogStickState l, HidAnalogStickState r, char *buf) {
-	return snprintf(buf, 99, "{\"id\":%d,\"bs\":%i,\"ls\":{\"x\":%d,\"y\":%d},\"rs\":{\"x\":%d,\"y\":%d}},", id, buttons, l.x, l.y, r.x, r.y);
+int build_payload(int id, bool is_connected, u32 buttons, HidAnalogStickState l, HidAnalogStickState r, char *buf) {
+	return snprintf(buf, 99, "{\"id\":%d,\"c\":%u,\"bs\":%i,\"ls\":{\"x\":%d,\"y\":%d},\"rs\":{\"x\":%d,\"y\":%d}},", id, is_connected? 1 : 0, buttons, l.x, l.y, r.x, r.y);
 }
